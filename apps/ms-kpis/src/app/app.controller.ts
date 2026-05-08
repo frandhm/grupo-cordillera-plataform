@@ -1,17 +1,18 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
 
-@Controller('kpis') // La URL será: http://localhost:3000/api/kpis
+@Controller('kpis')
 export class AppController {
+  // El "constructor" inyecta el servicio para que el controlador lo use
   constructor(private readonly kpiService: AppService) { }
 
-  @Get() // Cuando alguien pida ver los KPIs [cite: 100]
-  getKpis() {
+  @Get()
+  obtenerKpis() {
     return this.kpiService.obtenerTodos();
   }
 
-  @Post() // Cuando un sistema (POS/E-commerce) envíe datos [cite: 25]
-  createKpi(@Body() datos: any) {
+  @Post()
+  crearNuevoKpi(@Body() datos: any) {
     return this.kpiService.crearKpi(datos);
   }
 }
