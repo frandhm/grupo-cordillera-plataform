@@ -21,7 +21,22 @@ export class AppService {
     }
   }
 
-  async obtenerTodos(): Promise<KpiEntity[]> {
-    return await this.kpiRepository.find(); // Trae todo lo que hay en la tabla
+  // Esto le dice a TypeScript que esperas un arreglo de objetos que tienen 
+  // todo lo de KpiEntity MÁS los campos nuevos.
+  async obtenerTodos(): Promise<any[]> {
+    const kpis = await this.kpiRepository.find();
+
+    // Aquí aplicamos la lógica de negocio para "romper silos" y dar valor
+    return kpis.map(kpi => {
+      // Simulamos una meta (esto después vendrá del microservicio de Rodrigo)
+      const metaSimulada = 10000;
+      const porcentaje = (kpi.valor / metaSimulada) * 100;
+
+      return {
+        ...kpi,
+        cumplimiento: `${porcentaje.toFixed(2)}%`,
+        estado: porcentaje >= 100 ? 'META CUMPLIDA' : 'EN PROGRESO'
+      };
+    });
   }
 }
