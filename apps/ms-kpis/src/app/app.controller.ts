@@ -7,12 +7,12 @@ export class AppController {
   constructor(private readonly kpiService: AppService) { }
 
   @Get()
-  obtenerKpis() {
-    return this.kpiService.obtenerTodos();
+  async obtenerKpis() {
+    return await this.kpiService.obtenerTodos();
   }
 
   @Post()
-  crearNuevoKpi(@Body() datos: any) {
-    return this.kpiService.crearKpi(datos);
+  async crearNuevoKpi(@Body() datos: any) {
+    return await this.kpiService.crearKpi(datos);
   }
 }

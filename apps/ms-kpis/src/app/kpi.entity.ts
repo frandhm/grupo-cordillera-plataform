@@ -1,18 +1,18 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity() // Esto le dice a TypeORM que cree una tabla en la DB
+@Entity('kpis') // Esto creará la tabla 'kpis' en Postgres
 export class KpiEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column()
-    nombre: string; // Ejemplo: "Ventas Mensuales"
+    nombre: string;
 
     @Column('float')
     valor: number;
 
     @Column()
-    areaId: string; // Conecta con el microservicio de Áreas [cite: 69]
+    areaId: string;
 
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     fechaCreacion: Date;
