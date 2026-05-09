@@ -1,16 +1,12 @@
 version: '3.8'
 services:
+  # Base de Datos de KPIs
   db-kpis:
     image: postgres:15
     container_name: cordillera-db-kpis
     environment:
-      POSTGRES_DB: kpis_db
-      POSTGRES_USER: user_cordillera
-      POSTGRES_PASSWORD: password123
+      POSTGRES_USER: user_kpis
+      POSTGRES_PASSWORD: password_kpis
+      POSTGRES_DB: db_kpis
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data_kpis:/var/lib/postgresql/data
-
-volumes:
-  postgres_data_kpis:
