@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
+import { CreateKpiDto } from './dto/create-kpi.dto';
 
 @Controller('kpis')
 export class AppController {
@@ -12,7 +13,8 @@ export class AppController {
   }
 
   @Post()
-  async crearNuevoKpi(@Body() datos: any) {
+  async crearNuevoKpi(@Body() datos: CreateKpiDto) {
+    // Cambiamos 'any' por nuestro DTO
     return await this.kpiService.crearKpi(datos);
   }
 }
