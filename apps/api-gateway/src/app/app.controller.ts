@@ -22,4 +22,12 @@ export class AppController {
   async getKpis() {
     return await this.appService.obtenerKpisDesdeMicroservicio();
   }
+
+  @ApiBearerAuth() // Le decimos a Swagger que requiere Token
+  @UseGuards(AuthGuard) // Protegemos la ruta
+  @Get('dashboard/equipos')
+  @ApiOperation({ summary: 'Obtener listado de Equipos (Requiere Token)' })
+  async getEquipos() {
+    return await this.appService.obtenerEquiposDesdeMicroservicio();
+  }
 }

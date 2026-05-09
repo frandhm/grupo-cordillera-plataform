@@ -1,28 +1,32 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config'; // <-- Importamos ConfigModule
+import { ConfigModule, ConfigService } from '@nestjs/config'; // <-- Añadimos ConfigService
 import { EquipoEntity } from './equipo.entity';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 @Module({
   imports: [
-    // 1. Inicializamos el lector de variables de entorno
     ConfigModule.forRoot({
-      isGlobal: true, // Hace que las variables estén disponibles en todo el microservicio
+      isGlobal: true,
     }),
 
-    // 2. Usamos process.env para leer el archivo .env
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT, 10), // Convertimos el puerto a número
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      entities: [EquipoEntity],
-      synchronize: true,
+    // Cambiamos forRoot por forRootAsync
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService], // Inyectamos el servicio que lee el .env
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DB_EQUIPOS_HOST'),
+        port: configService.get<number>('DB_EQUIPOS_PORT'),
+        username: configService.get<string>('DB_EQUIPOS_USER'),
+        password: configService.get<string>('DB_EQUIPOS_PASSWORD'),
+        database: configService.get<string>('DB_EQUIPOS_NAME'),
+        entities: [EquipoEntity],
+        synchronize: true,
+      }),
     }),
+
     TypeOrmModule.forFeature([EquipoEntity]),
   ],
   controllers: [AppController],

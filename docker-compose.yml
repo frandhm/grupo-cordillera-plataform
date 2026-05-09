@@ -6,7 +6,7 @@ services:
     container_name: cordillera-db-kpis
     environment:
       POSTGRES_USER: user_kpis
-      POSTGRES_PASSWORD: password_kpis
+      POSTGRES_PASSWORD: NuevaClaveKpis2026!
       POSTGRES_DB: db_kpis
     ports:
       - "5432:5432"
@@ -16,7 +16,7 @@ services:
     container_name: cordillera-db-equipos
     environment:
       POSTGRES_USER: user_equipos
-      POSTGRES_PASSWORD: password_equipos
+      POSTGRES_PASSWORD: NuevaClaveEquipos2026!
       POSTGRES_DB: db_equipos
     ports:
       - "5433:5432" # OJO: Usamos el puerto 5433 para que no choque con la de KPIs

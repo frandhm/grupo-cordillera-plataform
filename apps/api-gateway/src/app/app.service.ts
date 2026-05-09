@@ -41,4 +41,11 @@ export class AppService {
       }, HttpStatus.SERVICE_UNAVAILABLE);
     }
   }
+
+  async obtenerEquiposDesdeMicroservicio() {
+    // El Gateway llama al puerto 3002 que es donde vive tu MS-Equipos
+    const url = 'http://localhost:3002/api/equipos';
+    const { data } = await firstValueFrom(this.httpService.get(url));
+    return data;
+  }
 }
