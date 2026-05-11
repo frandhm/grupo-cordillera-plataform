@@ -50,3 +50,51 @@ tmp/
 .env
 .env.*
 !.env.example
+.vscode
+
+# --- DEPENDENCIAS ---
+# No subas los paquetes pesados, cada uno los instala con npm install
+node_modules/
+/dist/
+/build/
+
+# --- CONFIGURACIÓN LOCAL (Tu computadora) ---
+# Aquí va lo que causó el conflicto con tu compañera
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- SEGURIDAD Y SECRETOS ---
+# ¡CRÍTICO! Nunca subas tus claves de base de datos
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+
+# --- NX (Cache y logs) ---
+# Nx guarda archivos temporales para ser más rápido, no los necesitamos en Git
+.nx/cache
+.nx/workspace-data
+.angular/cache
+
+# --- DOCKER ---
+# Si usas volúmenes de datos locales para Postgres
+pgdata/
+
+# --- LOGS Y DEPURACIÓN ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+logs
+*.log
+
+# --- SISTEMA OPERATIVO ---
+.DS_Store
+Thumbs.db
