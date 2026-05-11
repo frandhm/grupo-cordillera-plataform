@@ -6,13 +6,19 @@
       "request": "launch",
       "name": "Debug api-gateway with Nx",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["nx", "serve", "api-gateway"],
+      "runtimeArgs": [
+        "nx",
+        "serve",
+        "api-gateway"
+      ],
       "env": {
         "NODE_OPTIONS": "--inspect=9229"
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "skipFiles": ["<node_internals>/**"],
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
       "sourceMaps": true,
       "outFiles": [
         "${workspaceFolder}/apps/api-gateway/dist/**/*.(m|c|)js",
@@ -22,18 +28,24 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug ms-metas with Nx",
+      "name": "Debug ms-kpis with Nx",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["nx", "serve", "ms-metas"],
+      "runtimeArgs": [
+        "nx",
+        "serve",
+        "ms-kpis"
+      ],
       "env": {
         "NODE_OPTIONS": "--inspect=9230"
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "skipFiles": ["<node_internals>/**"],
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceFolder}/ms-metas/dist/**/*.(m|c|)js",
+        "${workspaceFolder}/apps/ms-kpis/dist/**/*.(m|c|)js",
         "!**/node_modules/**"
       ]
     }
