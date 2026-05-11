@@ -1,0 +1,8 @@
+# El API Gateway
+api-gateway:
+  build: .
+  command: npx nx serve api-gateway
+  ports:
+    - "3000:3000"
+  depends_on:
+    - ms-kpis
