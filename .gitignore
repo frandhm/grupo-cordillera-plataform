@@ -1,72 +1,100 @@
 # See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# Dependencies
-node_modules/
-/dist
-/tmp
-/out-tsc
-bazel-out/
+# compiled output
+dist
+tmp
+out-tsc
 
-# Nx
-.nx/cache/
-.nx/workspace-data/
-
-# Testing
-/coverage
-/test-results
-*.lcov
+# dependencies
+node_modules
 
 # IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.idea/
-*.swp
-*.swo
-*.sublime-project
-*.sublime-workspace
-.project
-.classpath
-.settings/
-.factorypath
 
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
 
-# OS Files
+# System Files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-Icon?
 
-# Environment Variables
+.nx/cache
+.nx/workspace-data
+.claude/worktrees
+.claude/settings.local.json
+
+node_modules/
+dist/
+.nx/cache/
+tmp/
+.env
+.env.*
+!.env.example
+.vscode
+
+# --- DEPENDENCIAS ---
+# No subas los paquetes pesados, cada uno los instala con npm install
+node_modules/
+/dist/
+/build/
+
+# --- CONFIGURACIÓN LOCAL (Tu computadora) ---
+# Aquí va lo que causó el conflicto con tu compañera
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- SEGURIDAD Y SECRETOS ---
+# ¡CRÍTICO! Nunca subas tus claves de base de datos
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env*.local
-!.env.example
+*.pem
 
-# Tools
-.claude/
-.gemini/
-.history/
-.pnpm-store/
-.npm/
-.cache/
+# --- NX (Cache y logs) ---
+# Nx guarda archivos temporales para ser más rápido, no los necesitamos en Git
+.nx/cache
+.nx/workspace-data
+.angular/cache
 
-# Docker
-.docker/
+# --- DOCKER ---
+# Si usas volúmenes de datos locales para Postgres
+pgdata/
+
+# --- LOGS Y DEPURACIÓN ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+logs
+*.log
+
+# --- SISTEMA OPERATIVO ---
+.DS_Store
+Thumbs.db
