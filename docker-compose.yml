@@ -5,18 +5,29 @@ services:
     image: postgres:15
     container_name: cordillera-db-kpis
     environment:
-      POSTGRES_USER: user_kpis
-      POSTGRES_PASSWORD: NuevaClaveKpis2026!
-      POSTGRES_DB: db_kpis
+      POSTGRES_USER: ${DB_KPIS_USER}
+      POSTGRES_PASSWORD: ${DB_KPIS_PASSWORD}
+      POSTGRES_DB: ${DB_KPIS_NAME}
     ports:
       - "5432:5432"
-  # Base de Datos para el Microservicio de Equipos
-  db-equipos:
+
+  # Base de Datos de Metas/Equipos
+  db-metas:
     image: postgres:15
-    container_name: cordillera-db-equipos
+    container_name: cordillera-db-metas
     environment:
-      POSTGRES_USER: user_equipos
-      POSTGRES_PASSWORD: NuevaClaveEquipos2026!
-      POSTGRES_DB: db_equipos
+      POSTGRES_USER: ${DB_METAS_USER}
+      POSTGRES_PASSWORD: ${DB_METAS_PASSWORD}
+      POSTGRES_DB: ${DB_METAS_NAME}
     ports:
-      - "5433:5432" # OJO: Usamos el puerto 5433 para que no choque con la de KPIs
+      - "5433:5432"
+
+  db-equipos:
+      image: postgres:15
+      container_name: cordillera-db-equipos
+      environment:
+        POSTGRES_USER: ${DB_EQUIPOS_USER}
+        POSTGRES_PASSWORD: ${DB_EQUIPOS_PASSWORD}
+        POSTGRES_DB: ${DB_EQUIPOS_NAME}
+      ports:
+        - "5434:5432"  
