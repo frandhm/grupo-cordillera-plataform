@@ -1,100 +1,64 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# ==========================================
+# GRUPO CORDILLERA - PLATAFORMA (NX MONOREPO)
+# ==========================================
 
-# compiled output
-dist
-tmp
-out-tsc
-
-# dependencies
-node_modules
-
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-
-# System Files
-.DS_Store
-Thumbs.db
-
-.nx/cache
-.nx/workspace-data
-.claude/worktrees
-.claude/settings.local.json
-
-node_modules/
-dist/
-.nx/cache/
-tmp/
-.env
-.env.*
-!.env.example
-.vscode
-
-# --- DEPENDENCIAS ---
-# No subas los paquetes pesados, cada uno los instala con npm install
+# --- DEPENDENCIAS Y SALIDAS DE CONSTRUCCIÓN ---
 node_modules/
 /dist/
 /build/
+/tmp/
+/out-tsc/
+/coverage/
 
-# --- CONFIGURACIÓN LOCAL (Tu computadora) ---
-# Aquí va lo que causó el conflicto con tu compañera
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# --- NX & HERRAMIENTAS DE DESARROLLO ---
+.nx/cache/
+.nx/workspace-data/
+.angular/cache/
+.claude/
+/.sass-cache/
 
-# --- SEGURIDAD Y SECRETOS ---
-# ¡CRÍTICO! Nunca subas tus claves de base de datos
+# --- CONFIGURACIÓN LOCAL Y SECRETOS (CRÍTICO) ---
+# No subir credenciales de DB ni configuraciones personales
 .env
+.env.*
+!.env.example
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-*.pem
 
-# --- NX (Cache y logs) ---
-# Nx guarda archivos temporales para ser más rápido, no los necesitamos en Git
-.nx/cache
-.nx/workspace-data
-.angular/cache
+# --- IDEs (VS Code / JetBrains / Otros) ---
+# Esto evita que tus temas o extensiones personales afecten a tus compañeros
+.vscode/
+.idea/
+*.swp
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sublime-workspace
+.project
+.classpath
+.settings/
 
 # --- DOCKER ---
-# Si usas volúmenes de datos locales para Postgres
+# Ignorar la carpeta donde Postgres guarda los datos físicos (si la usas)
 pgdata/
+docker/data/
 
 # --- LOGS Y DEPURACIÓN ---
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-logs
-*.log
 
 # --- SISTEMA OPERATIVO ---
 .DS_Store
 Thumbs.db
+/libpeerconnection.log
+
+# --- OTROS ---
+/connect.lock
+testem.log
+/typings/
