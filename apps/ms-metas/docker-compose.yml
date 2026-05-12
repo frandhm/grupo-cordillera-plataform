@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  db-metas:
+    image: postgres:15
+    container_name: cordillera-db-metas
+    environment:
+      POSTGRES_DB: metas_db
+      POSTGRES_USER: user_cordillera
+      POSTGRES_PASSWORD: cordillera0101
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_metas:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_metas:

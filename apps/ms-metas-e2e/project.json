@@ -1,0 +1,17 @@
+{
+  "name": "ms-metas-e2e",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": ["ms-metas"],
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],
+      "options": {
+        "jestConfig": "ms-metas-e2e/jest.config.cts",
+        "passWithNoTests": true
+      },
+      "dependsOn": ["ms-metas:build", "ms-metas:serve"]
+    }
+  }
+}
