@@ -2,14 +2,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "module": "node16",
+    "module": "commonjs",
     "types": ["node"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "target": "es2021",
-    "moduleResolution": "node16",
-    "strictPropertyInitialization": false,
-    "ignoreDeprecations": "5.0"
+    "moduleResolution": "node10"
   },
   "include": ["src/**/*.ts"],
   "exclude": [
