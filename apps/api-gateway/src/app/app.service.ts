@@ -41,4 +41,23 @@ export class AppService {
       }, HttpStatus.SERVICE_UNAVAILABLE);
     }
   }
+
+  async obtenerEquiposDesdeMicroservicio() {
+    // El Gateway llama al puerto 3002 que es donde vive tu MS-Equipos
+    const url = 'http://localhost:3003/api/equipos';
+    const { data } = await firstValueFrom(this.httpService.get(url));
+    return data;
+  }
+
+  async crearEquipo(datos: any) {
+    const url = 'http://localhost:3002/api/equipos';
+    try {
+      // Usamos .post en lugar de .get y le pasamos los datos
+      const { data } = await firstValueFrom(this.httpService.post(url, datos));
+      return data;
+    } catch (error) {
+      console.error('Error al crear equipo:', error.message);
+      throw new Error('No se pudo crear el equipo');
+    }
+  }
 }

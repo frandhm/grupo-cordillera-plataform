@@ -42,6 +42,7 @@
         "targetName": "test"
       },
 
+
       "exclude": [
         "apps/api-gateway-e2e/**/*",
         "apps/ms-kpis-e2e/**/*",

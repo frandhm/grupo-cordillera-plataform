@@ -5,8 +5,12 @@ import { AppModule } from './app/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
+
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
+  app.setGlobalPrefix(globalPrefix);
+
 
   // Activamos las validaciones globales (para el LoginDto por ejemplo)
   app.useGlobalPipes(new ValidationPipe());
