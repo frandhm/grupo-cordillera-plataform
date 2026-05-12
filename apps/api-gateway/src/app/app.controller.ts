@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'; // Impor
 import { AppService } from './app.service';
 import { AuthGuard } from './auth.guard';
 import { LoginDto } from './dto/login.dto';
+import { CrearEquipoDto } from './dto/crear-equipo.dto';
 
 @ApiTags('Plataforma Cordillera') // Agrupa todo bajo un nombre bonito
 @Controller()
@@ -13,6 +14,14 @@ export class AppController {
   @ApiOperation({ summary: 'Iniciar sesión y obtener token JWT' })
   async login(@Body() credenciales: LoginDto) {
     return await this.appService.login(credenciales.usuario, credenciales.clave);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('dashboard/equipos')
+  @ApiOperation({ summary: 'Crear un nuevo Equipo (Requiere Token)' })
+  async crearEquipo(@Body() nuevoEquipo: CrearEquipoDto) {
+    return await this.appService.crearEquipo(nuevoEquipo);
   }
 
   @ApiBearerAuth() // <--- Esto le dice a Swagger: "Esta ruta pide Token"

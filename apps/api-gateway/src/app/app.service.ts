@@ -48,4 +48,16 @@ export class AppService {
     const { data } = await firstValueFrom(this.httpService.get(url));
     return data;
   }
+
+  async crearEquipo(datos: any) {
+    const url = 'http://localhost:3002/api/equipos';
+    try {
+      // Usamos .post en lugar de .get y le pasamos los datos
+      const { data } = await firstValueFrom(this.httpService.post(url, datos));
+      return data;
+    } catch (error) {
+      console.error('Error al crear equipo:', error.message);
+      throw new Error('No se pudo crear el equipo');
+    }
+  }
 }
