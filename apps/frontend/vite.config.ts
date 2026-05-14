@@ -19,6 +19,12 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ms/, ''),
       },
+      // /ms-eq/... → http://localhost:3003/...  (ms-equipos directo)
+      '/ms-eq': {
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/ms-eq/, ''),
+      },
     },
   },
 })

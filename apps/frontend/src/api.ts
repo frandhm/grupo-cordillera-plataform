@@ -2,12 +2,14 @@
  * API Client — Grupo Cordillera
  *
  * Rutas (resueltas por el proxy de Vite):
- *   /gw  →  http://localhost:3000  (API Gateway)
- *   /ms  →  http://localhost:3001  (ms-kpis directo)
+ *   /gw    →  http://localhost:3000  (API Gateway)
+ *   /ms    →  http://localhost:3001  (ms-kpis directo)
+ *   /ms-eq →  http://localhost:3003  (ms-equipos directo)
  */
 
-const GW = '/gw'; // API Gateway  (:3000)
-const MS = '/ms'; // MS-KPIs      (:3001)
+const GW    = '/gw';    // API Gateway  (:3000)
+const MS    = '/ms';    // MS-KPIs      (:3001)
+const MS_EQ = '/ms-eq'; // MS-Equipos   (:3003)
 
 /* ── Types ──────────────────────────────────────────────────── */
 
@@ -16,7 +18,6 @@ export interface LoginResponse {
   mensaje: string;
 }
 
-/** KPI enriquecido que devuelve el Gateway (con cumplimiento y estado) */
 export interface KpiGateway {
   id: string;
   nombre: string;
@@ -27,7 +28,6 @@ export interface KpiGateway {
   estado: 'META CUMPLIDA' | 'EN PROGRESO';
 }
 
-/** KPI crudo que devuelve el microservicio directamente */
 export interface KpiRaw {
   id: string;
   nombre: string;
@@ -42,12 +42,27 @@ export interface CreateKpiPayload {
   areaId: string;
 }
 
+export interface Equipo {
+  id: number;
+  nombre: string;
+  lider: string;
+  departamento: string;
+  cantidadIntegrantes: number;
+  fechaCreacion: string;
+}
+
+export interface CreateEquipoPayload {
+  nombre: string;
+  lider: string;
+  departamento: string;
+  cantidadIntegrantes: number;
+}
+
 /* ── Helper ─────────────────────────────────────────────────── */
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    // NestJS envuelve los errores en { message: string | string[] }
     const msg = Array.isArray(body.message)
       ? body.message.join(', ')
       : body.message || `Error ${res.status}`;
@@ -58,13 +73,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
 /* ── Auth ───────────────────────────────────────────────────── */
 
-/**
- * POST /api/auth/login  →  { access_token, mensaje }
- */
-export async function login(
-  usuario: string,
-  clave: string
-): Promise<LoginResponse> {
+export async function login(usuario: string, clave: string): Promise<LoginResponse> {
   const res = await fetch(`${GW}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -75,10 +84,6 @@ export async function login(
 
 /* ── Gateway KPIs ───────────────────────────────────────────── */
 
-/**
- * GET /api/dashboard/kpis  →  KpiGateway[]
- * Requiere Bearer token.
- */
 export async function getGatewayKpis(token: string): Promise<KpiGateway[]> {
   const res = await fetch(`${GW}/api/dashboard/kpis`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -86,21 +91,37 @@ export async function getGatewayKpis(token: string): Promise<KpiGateway[]> {
   return handleResponse<KpiGateway[]>(res);
 }
 
+/* ── Gateway Equipos ────────────────────────────────────────── */
+
+export async function getGatewayEquipos(token: string): Promise<Equipo[]> {
+  const res = await fetch(`${GW}/api/dashboard/equipos`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<Equipo[]>(res);
+}
+
+export async function crearEquipoGateway(
+  token: string,
+  payload: CreateEquipoPayload
+): Promise<Equipo> {
+  const res = await fetch(`${GW}/api/dashboard/equipos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<Equipo>(res);
+}
+
 /* ── MS-KPIs directo ────────────────────────────────────────── */
 
-/**
- * GET /api/kpis  →  KpiRaw[]
- * Sin autenticación — acceso directo al microservicio.
- */
 export async function getMsKpis(): Promise<KpiRaw[]> {
   const res = await fetch(`${MS}/api/kpis`);
   return handleResponse<KpiRaw[]>(res);
 }
 
-/**
- * POST /api/kpis  →  KpiRaw
- * Crea un nuevo KPI directamente en el microservicio.
- */
 export async function createKpi(payload: CreateKpiPayload): Promise<KpiRaw> {
   const res = await fetch(`${MS}/api/kpis`, {
     method: 'POST',
@@ -108,4 +129,11 @@ export async function createKpi(payload: CreateKpiPayload): Promise<KpiRaw> {
     body: JSON.stringify(payload),
   });
   return handleResponse<KpiRaw>(res);
+}
+
+/* ── MS-Equipos directo ─────────────────────────────────────── */
+
+export async function getMsEquipos(): Promise<Equipo[]> {
+  const res = await fetch(`${MS_EQ}/api/equipos`);
+  return handleResponse<Equipo[]>(res);
 }
