@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { MedicionEntity } from './medicion.entity';
 
-@Entity('kpis') // Esto creará la tabla 'kpis' en Postgres
+@Entity('kpis')
 export class KpiEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -14,6 +15,15 @@ export class KpiEntity {
     @Column()
     areaId: string;
 
+    @Column({ nullable: true })
+    descripcion: string;
+
+    @Column({ default: 'unidades' })
+    unidadMedicion: string;
+
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     fechaCreacion: Date;
+
+    @OneToMany(() => MedicionEntity, (medicion) => medicion.kpi)
+    mediciones: MedicionEntity[];
 }

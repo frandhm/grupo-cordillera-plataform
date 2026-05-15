@@ -14,4 +14,14 @@ export class AppController {
   obtenerTodos() {
     return this.appService.obtenerTodos();
   }
+
+  @Get('areas')
+  obtenerAreas() {
+    return this.appService.obtenerAreas();
+  }
+
+  @Post('areas')
+  crearArea(@Body('nombre') nombre: string) {
+    return this.appService.crearArea(nombre);
+  }
 }

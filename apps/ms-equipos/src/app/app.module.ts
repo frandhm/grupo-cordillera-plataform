@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config'; // <-- Añadimos ConfigService
 import { EquipoEntity } from './equipo.entity';
+import { AreaEntity } from './area.entity';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -11,10 +12,9 @@ import { AppService } from './app.service';
       isGlobal: true,
     }),
 
-    // Cambiamos forRoot por forRootAsync
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      inject: [ConfigService], // Inyectamos el servicio que lee el .env
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get<string>('DB_EQUIPOS_HOST'),
@@ -22,12 +22,12 @@ import { AppService } from './app.service';
         username: configService.get<string>('DB_EQUIPOS_USER'),
         password: configService.get<string>('DB_EQUIPOS_PASSWORD'),
         database: configService.get<string>('DB_EQUIPOS_NAME'),
-        entities: [EquipoEntity],
+        entities: [EquipoEntity, AreaEntity],
         synchronize: true,
       }),
     }),
 
-    TypeOrmModule.forFeature([EquipoEntity]),
+    TypeOrmModule.forFeature([EquipoEntity, AreaEntity]),
   ],
   controllers: [AppController],
   providers: [AppService],

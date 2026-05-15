@@ -11,11 +11,30 @@ export class AppService {
   ) { }
 
   async login(usuario: string, clave: string) {
+    // JEFE (Acceso total)
     if (usuario === 'admin@cordillera.com' && clave === '123456') {
-      const payload = { email: usuario, role: 'admin' };
+      const payload = { email: usuario, role: 'jefe' };
       return {
         access_token: await this.jwtService.signAsync(payload),
-        mensaje: 'Bienvenido al Sistema de Gestión Cordillera'
+        mensaje: 'Bienvenido, Jefe del Sistema Cordillera'
+      };
+    }
+
+    // GERENTE (Todo menos metas)
+    if (usuario === 'gerente@cordillera.com' && clave === '123456') {
+      const payload = { email: usuario, role: 'gerente' };
+      return {
+        access_token: await this.jwtService.signAsync(payload),
+        mensaje: 'Panel de Gerencia - Grupo Cordillera'
+      };
+    }
+
+    // VENDEDOR (Solo métricas)
+    if (usuario === 'vendedor@cordillera.com' && clave === '123456') {
+      const payload = { email: usuario, role: 'vendedor' };
+      return {
+        access_token: await this.jwtService.signAsync(payload),
+        mensaje: 'Portal de Ventas - Grupo Cordillera'
       };
     }
     throw new UnauthorizedException('Credenciales incorrectas');

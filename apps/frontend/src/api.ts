@@ -166,6 +166,20 @@ export async function createKpi(payload: CreateKpiPayload): Promise<KpiRaw> {
   return handleResponse<KpiRaw>(res);
 }
 
+export async function actualizarKpi(id: string, valor: number): Promise<KpiRaw> {
+  const res = await fetch(`${MS}/api/kpis/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ valor }),
+  });
+  return handleResponse<KpiRaw>(res);
+}
+
+export async function getHistorialKpi(id: string): Promise<any[]> {
+  const res = await fetch(`${MS}/api/kpis/${id}/historial`);
+  return handleResponse<any[]>(res);
+}
+
 /* ══════════════════════════════════════════════════════════════
    EQUIPOS — Gateway :3000 (GET con JWT)
 ══════════════════════════════════════════════════════════════ */

@@ -1,10 +1,8 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
 import { AppService } from './app.service';
-import { CreateKpiDto } from './dto/create-kpi.dto';
 
 @Controller('kpis')
 export class AppController {
-  // El "constructor" inyecta el servicio para que el controlador lo use
   constructor(private readonly kpiService: AppService) { }
 
   @Get()
@@ -13,8 +11,17 @@ export class AppController {
   }
 
   @Post()
-  async crearNuevoKpi(@Body() datos: CreateKpiDto) {
-    // Cambiamos 'any' por nuestro DTO
+  async crearNuevoKpi(@Body() datos: any) {
     return await this.kpiService.crearKpi(datos);
+  }
+
+  @Patch(':id')
+  async actualizarKpi(@Param('id') id: string, @Body('valor') valor: number) {
+    return await this.kpiService.actualizarValor(id, valor);
+  }
+
+  @Get(':id/historial')
+  async obtenerHistorial(@Param('id') id: string) {
+    return await this.kpiService.obtenerHistorial(id);
   }
 }
