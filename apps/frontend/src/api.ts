@@ -1,17 +1,21 @@
 /**
  * API Client — Grupo Cordillera
  *
- * Rutas (resueltas por el proxy de Vite):
- *   /gw    →  http://localhost:3000  (API Gateway)
- *   /ms    →  http://localhost:3001  (ms-kpis directo)
- *   /ms-eq →  http://localhost:3003  (ms-equipos directo)
+ * Proxies Vite (orden importa: más específicos primero):
+ *   /gw    → :3000  API Gateway
+ *   /ms-eq → :3003  ms-equipos  (antes que /ms para evitar match incorrecto)
+ *   /ms-mt → :3002  ms-metas    (antes que /ms para evitar match incorrecto)
+ *   /ms    → :3001  ms-kpis
  */
 
-const GW    = '/gw';    // API Gateway  (:3000)
-const MS    = '/ms';    // MS-KPIs      (:3001)
-const MS_EQ = '/ms-eq'; // MS-Equipos   (:3003)
+const GW    = '/gw';
+const MS    = '/ms';
+const MS_EQ = '/ms-eq';
+const MS_MT = '/ms-mt';
 
-/* ── Types ──────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   TYPES
+══════════════════════════════════════════════════════════════ */
 
 export interface LoginResponse {
   access_token: string;
@@ -58,7 +62,39 @@ export interface CreateEquipoPayload {
   cantidadIntegrantes: number;
 }
 
-/* ── Helper ─────────────────────────────────────────────────── */
+export type EstadoMeta = 'EN_PROGRESO' | 'CUMPLIDA' | 'NO_CUMPLIDA';
+
+export interface Meta {
+  id: string;
+  nombre: string;
+  areaId: string;
+  valorObjetivo: number;
+  valorActual: number;
+  estado: EstadoMeta;
+  fechaLimite: string;
+  fechaCreacion: string;
+  porcentajeCumplimiento?: string;
+}
+
+export interface CreateMetaPayload {
+  nombre: string;
+  areaId: string;
+  valorObjetivo: number;
+  valorActual: number;
+  fechaLimite: string;
+}
+
+export interface UpdateMetaPayload {
+  nombre?: string;
+  areaId?: string;
+  valorObjetivo?: number;
+  valorActual?: number;
+  fechaLimite?: string;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HELPER
+══════════════════════════════════════════════════════════════ */
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -71,7 +107,9 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json();
 }
 
-/* ── Auth ───────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   AUTH — Gateway :3000
+══════════════════════════════════════════════════════════════ */
 
 export async function login(usuario: string, clave: string): Promise<LoginResponse> {
   const res = await fetch(`${GW}/api/auth/login`, {
@@ -82,7 +120,9 @@ export async function login(usuario: string, clave: string): Promise<LoginRespon
   return handleResponse<LoginResponse>(res);
 }
 
-/* ── Gateway KPIs ───────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   KPIs — Gateway :3000 (con JWT)
+══════════════════════════════════════════════════════════════ */
 
 export async function getGatewayKpis(token: string): Promise<KpiGateway[]> {
   const res = await fetch(`${GW}/api/dashboard/kpis`, {
@@ -91,31 +131,9 @@ export async function getGatewayKpis(token: string): Promise<KpiGateway[]> {
   return handleResponse<KpiGateway[]>(res);
 }
 
-/* ── Gateway Equipos ────────────────────────────────────────── */
-
-export async function getGatewayEquipos(token: string): Promise<Equipo[]> {
-  const res = await fetch(`${GW}/api/dashboard/equipos`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return handleResponse<Equipo[]>(res);
-}
-
-export async function crearEquipoGateway(
-  token: string,
-  payload: CreateEquipoPayload
-): Promise<Equipo> {
-  const res = await fetch(`${GW}/api/dashboard/equipos`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
-  return handleResponse<Equipo>(res);
-}
-
-/* ── MS-KPIs directo ────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   KPIs — ms-kpis :3001 (directo, sin auth)
+══════════════════════════════════════════════════════════════ */
 
 export async function getMsKpis(): Promise<KpiRaw[]> {
   const res = await fetch(`${MS}/api/kpis`);
@@ -131,9 +149,73 @@ export async function createKpi(payload: CreateKpiPayload): Promise<KpiRaw> {
   return handleResponse<KpiRaw>(res);
 }
 
-/* ── MS-Equipos directo ─────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   EQUIPOS — Gateway :3000 (GET con JWT)
+══════════════════════════════════════════════════════════════ */
+
+export async function getGatewayEquipos(token: string): Promise<Equipo[]> {
+  const res = await fetch(`${GW}/api/dashboard/equipos`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<Equipo[]>(res);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EQUIPOS — ms-equipos :3003 (directo, sin auth)
+   BUG FIX: El gateway POST /dashboard/equipos llama internamente
+   a :3002 (que es ms-metas, no ms-equipos). Para crear equipos
+   correctamente hay que ir directo al microservicio en :3003.
+══════════════════════════════════════════════════════════════ */
 
 export async function getMsEquipos(): Promise<Equipo[]> {
   const res = await fetch(`${MS_EQ}/api/equipos`);
   return handleResponse<Equipo[]>(res);
+}
+
+export async function crearEquipoDirecto(payload: CreateEquipoPayload): Promise<Equipo> {
+  const res = await fetch(`${MS_EQ}/api/equipos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<Equipo>(res);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   METAS — ms-metas :3002 (directo, sin auth)
+══════════════════════════════════════════════════════════════ */
+
+export async function getMsMetas(): Promise<Meta[]> {
+  const res = await fetch(`${MS_MT}/api/metas`);
+  return handleResponse<Meta[]>(res);
+}
+
+export async function getMetaPorId(id: string): Promise<Meta> {
+  const res = await fetch(`${MS_MT}/api/metas/${id}`);
+  return handleResponse<Meta>(res);
+}
+
+export async function crearMeta(payload: CreateMetaPayload): Promise<Meta> {
+  const res = await fetch(`${MS_MT}/api/metas`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<Meta>(res);
+}
+
+export async function actualizarMeta(id: string, payload: UpdateMetaPayload): Promise<Meta> {
+  const res = await fetch(`${MS_MT}/api/metas/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<Meta>(res);
+}
+
+export async function eliminarMeta(id: string): Promise<{ mensaje: string }> {
+  const res = await fetch(`${MS_MT}/api/metas/${id}`, {
+    method: 'DELETE',
+  });
+  return handleResponse<{ mensaje: string }>(res);
 }
