@@ -11,6 +11,9 @@ export class MetaEntity {
   @Column()
   areaId: string;
 
+  @Column({ nullable: true })
+  indicadorId: string;
+
   @Column('float')
   valorObjetivo: number;
 

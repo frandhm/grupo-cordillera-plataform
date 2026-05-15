@@ -2,21 +2,33 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MetaEntity } from './meta.entity';
+import { KpiApiFacade } from './kpi-api.facade';
 
 @Injectable()
 export class AppService {
   constructor(
     @InjectRepository(MetaEntity)
     private readonly metaRepository: Repository<MetaEntity>,
+    private readonly kpiApiFacade: KpiApiFacade,
   ) {}
 
   async crearMeta(datos: any): Promise<MetaEntity> {
+    // REGLA DE NEGOCIO: Validar que el indicador exista
+    if (datos.indicadorId) {
+      await this.kpiApiFacade.validarIndicador(datos.indicadorId);
+      // Opcional: Si no envían valor actual, lo traemos del microservicio
+      if (datos.valorActual === undefined || datos.valorActual === 0) {
+        datos.valorActual = await this.kpiApiFacade.obtenerValorActual(datos.indicadorId);
+      }
+    }
+
     const estado = this.calcularEstado(datos.valorActual ?? 0, datos.valorObjetivo, datos.fechaLimite);
     return await this.metaRepository.save({ ...datos, estado });
   }
 
   async obtenerTodas(): Promise<any[]> {
     const metas = await this.metaRepository.find();
+    // Podríamos actualizar los valores actuales aquí también si quisiéramos datos "en vivo"
     return metas.map((meta) => {
       const porcentaje = (meta.valorActual / meta.valorObjetivo) * 100;
       return {
@@ -30,6 +42,12 @@ export class AppService {
   async obtenerPorId(id: string): Promise<any> {
     const meta = await this.metaRepository.findOne({ where: { id } });
     if (!meta) throw new NotFoundException(`Meta con id ${id} no encontrada`);
+    
+    // Si tiene indicadorId, refrescamos el valor actual desde el MS-KPIs
+    if (meta.indicadorId) {
+      meta.valorActual = await this.kpiApiFacade.obtenerValorActual(meta.indicadorId);
+    }
+
     const porcentaje = (meta.valorActual / meta.valorObjetivo) * 100;
     return {
       ...meta,
@@ -41,6 +59,11 @@ export class AppService {
   async actualizarMeta(id: string, datos: any): Promise<MetaEntity> {
     const meta = await this.metaRepository.findOne({ where: { id } });
     if (!meta) throw new NotFoundException(`Meta con id ${id} no encontrada`);
+
+    if (datos.indicadorId && datos.indicadorId !== meta.indicadorId) {
+      await this.kpiApiFacade.validarIndicador(datos.indicadorId);
+    }
+
     const actualizado = { ...meta, ...datos };
     actualizado.estado = this.calcularEstado(actualizado.valorActual, actualizado.valorObjetivo, actualizado.fechaLimite);
     return await this.metaRepository.save(actualizado);

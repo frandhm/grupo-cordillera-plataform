@@ -7,52 +7,80 @@ import { firstValueFrom } from 'rxjs';
 export class AppService {
   constructor(
     private readonly httpService: HttpService,
-    private readonly jwtService: JwtService // Inyectamos el servicio de JWT
+    private readonly jwtService: JwtService
   ) { }
 
   async login(usuario: string, clave: string) {
-    // Simulamos un usuario de la base de datos del Grupo Cordillera
     if (usuario === 'admin@cordillera.com' && clave === '123456') {
       const payload = { email: usuario, role: 'admin' };
-
       return {
         access_token: await this.jwtService.signAsync(payload),
         mensaje: 'Bienvenido al Sistema de Gestión Cordillera'
       };
     }
-
     throw new UnauthorizedException('Credenciales incorrectas');
   }
 
-  // Esta función es el "puente" hacia tu microservicio de KPIs
   async obtenerKpisDesdeMicroservicio() {
     const url = 'http://localhost:3001/api/kpis';
     try {
       const { data } = await firstValueFrom(this.httpService.get(url));
       return data;
     } catch (error) {
-      // Log de error interno para el desarrollador
       console.error('Error conectando con MS-KPIs:', error.message);
-      // Respuesta resiliente para el usuario
       throw new HttpException({
         status: HttpStatus.SERVICE_UNAVAILABLE,
         error: 'El servicio de KPIs no está disponible temporalmente.',
-        sugerencia: 'Por favor, intente en unos minutos.'
       }, HttpStatus.SERVICE_UNAVAILABLE);
     }
   }
 
   async obtenerEquiposDesdeMicroservicio() {
-    // El Gateway llama al puerto 3002 que es donde vive tu MS-Equipos
     const url = 'http://localhost:3003/api/equipos';
-    const { data } = await firstValueFrom(this.httpService.get(url));
-    return data;
+    try {
+      const { data } = await firstValueFrom(this.httpService.get(url));
+      return data;
+    } catch (error) {
+      console.error('Error conectando con MS-Equipos:', error.message);
+      return [];
+    }
+  }
+
+  // AGREGACIÓN BFF: Combina KPIs con sus Metas
+  async obtenerResumenConsolidado() {
+    const urlKpis = 'http://localhost:3001/api/kpis';
+    const urlMetas = 'http://localhost:3002/api/metas';
+
+    try {
+      // Llamadas en paralelo para eficiencia
+      const [resKpis, resMetas] = await Promise.all([
+        firstValueFrom(this.httpService.get(urlKpis)),
+        firstValueFrom(this.httpService.get(urlMetas))
+      ]);
+
+      const kpis = resKpis.data;
+      const metas = resMetas.data;
+
+      // Unimos cada KPI con su meta correspondiente
+      return kpis.map(kpi => {
+        const metaAsociada = metas.find(m => m.indicadorId === kpi.id);
+        return {
+          ...kpi,
+          meta: metaAsociada || null,
+          cumplimientoCalculado: metaAsociada 
+            ? `${((kpi.valor / metaAsociada.valorObjetivo) * 100).toFixed(2)}%`
+            : '0%'
+        };
+      });
+    } catch (error) {
+      console.error('Error al consolidar resumen:', error.message);
+      throw new HttpException('Error al obtener datos consolidados', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async crearEquipo(datos: any) {
-    const url = 'http://localhost:3002/api/equipos';
+    const url = 'http://localhost:3003/api/equipos';
     try {
-      // Usamos .post en lugar de .get y le pasamos los datos
       const { data } = await firstValueFrom(this.httpService.post(url, datos));
       return data;
     } catch (error) {

@@ -27,6 +27,8 @@ export interface KpiGateway {
   nombre: string;
   valor: number;
   areaId: string;
+  descripcion?: string;
+  unidadMedicion: string;
   fechaCreacion: string;
   cumplimiento: string;
   estado: 'META CUMPLIDA' | 'EN PROGRESO';
@@ -37,6 +39,8 @@ export interface KpiRaw {
   nombre: string;
   valor: number;
   areaId: string;
+  descripcion?: string;
+  unidadMedicion: string;
   fechaCreacion: string;
 }
 
@@ -44,22 +48,35 @@ export interface CreateKpiPayload {
   nombre: string;
   valor: number;
   areaId: string;
+  descripcion?: string;
+  unidadMedicion: string;
 }
 
 export interface Equipo {
   id: number;
   nombre: string;
   lider: string;
-  departamento: string;
+  areaId: string;
+  area?: Area;
   cantidadIntegrantes: number;
   fechaCreacion: string;
+}
+
+export interface Area {
+  id: string;
+  nombre: string;
+  equipos?: Equipo[];
 }
 
 export interface CreateEquipoPayload {
   nombre: string;
   lider: string;
-  departamento: string;
+  areaId: string;
   cantidadIntegrantes: number;
+}
+
+export interface CreateAreaPayload {
+  nombre: string;
 }
 
 export type EstadoMeta = 'EN_PROGRESO' | 'CUMPLIDA' | 'NO_CUMPLIDA';
@@ -218,4 +235,33 @@ export async function eliminarMeta(id: string): Promise<{ mensaje: string }> {
     method: 'DELETE',
   });
   return handleResponse<{ mensaje: string }>(res);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AREAS — ms-equipos :3003
+══════════════════════════════════════════════════════════════ */
+
+export async function getMsAreas(): Promise<Area[]> {
+  const res = await fetch(`${MS_EQ}/api/areas`);
+  return handleResponse<Area[]>(res);
+}
+
+export async function crearArea(payload: CreateAreaPayload): Promise<Area> {
+  const res = await fetch(`${MS_EQ}/api/areas`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<Area>(res);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BFF — Gateway :3000
+══════════════════════════════════════════════════════════════ */
+
+export async function getResumenConsolidado(token: string): Promise<any[]> {
+  const res = await fetch(`${GW}/api/dashboard/resumen`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<any[]>(res);
 }

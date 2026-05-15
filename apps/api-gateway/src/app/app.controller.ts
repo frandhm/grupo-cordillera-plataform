@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'; // Imports de Swagger
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { AuthGuard } from './auth.guard';
 import { LoginDto } from './dto/login.dto';
 import { CrearEquipoDto } from './dto/crear-equipo.dto';
 
-@ApiTags('Plataforma Cordillera') // Agrupa todo bajo un nombre bonito
+@ApiTags('Plataforma Cordillera')
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) { }
@@ -24,7 +24,7 @@ export class AppController {
     return await this.appService.crearEquipo(nuevoEquipo);
   }
 
-  @ApiBearerAuth() // <--- Esto le dice a Swagger: "Esta ruta pide Token"
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Get('dashboard/kpis')
   @ApiOperation({ summary: 'Obtener KPIs consolidados (Requiere Token)' })
@@ -32,11 +32,19 @@ export class AppController {
     return await this.appService.obtenerKpisDesdeMicroservicio();
   }
 
-  @ApiBearerAuth() // Le decimos a Swagger que requiere Token
-  @UseGuards(AuthGuard) // Protegemos la ruta
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @Get('dashboard/equipos')
   @ApiOperation({ summary: 'Obtener listado de Equipos (Requiere Token)' })
   async getEquipos() {
     return await this.appService.obtenerEquiposDesdeMicroservicio();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Get('dashboard/resumen')
+  @ApiOperation({ summary: 'Obtener resumen consolidado de KPIs y Metas (BFF)' })
+  async getResumen() {
+    return await this.appService.obtenerResumenConsolidado();
   }
 }
