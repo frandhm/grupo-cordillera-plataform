@@ -17,7 +17,7 @@ export function SectionHeader({ title, desc, badge, badgeType, onRefresh, loadin
         </span>
         {onRefresh && (
           <button className="btn-refresh" onClick={onRefresh} disabled={loading}>
-            {loading ? '...' : '↻ Actualizar'}
+            {loading ? '...' : 'ACTUALIZAR'}
           </button>
         )}
       </div>
@@ -100,13 +100,13 @@ export function MetaCard({ meta, onEditar, onEliminar }: {
         {meta.porcentajeCumplimiento ?? `${pct.toFixed(2)}%`} · objetivo: {meta.valorObjetivo.toLocaleString('es-CL')}
       </div>
       <div className="kpi-id">Límite: {new Date(meta.fechaLimite).toLocaleDateString('es-CL')}</div>
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-        <button className="btn-refresh" style={{ flex: 1 }} onClick={() => onEditar(meta)}>✎ Editar</button>
+      <div style={{ display: 'flex', gap: '0.4rem', marginTop: '1rem' }}>
+        <button className="action-btn btn-edit" style={{ flex: 1 }} onClick={() => onEditar(meta)}>EDITAR</button>
         <button
-          className="btn-refresh"
-          style={{ flex: 1, borderColor: 'var(--red)', color: 'var(--red)' }}
+          className="action-btn btn-delete"
+          style={{ flex: 1 }}
           onClick={() => onEliminar(meta.id)}
-        >✕ Eliminar</button>
+        >ELIMINAR</button>
       </div>
     </div>
   );

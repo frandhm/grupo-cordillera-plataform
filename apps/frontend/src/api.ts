@@ -85,6 +85,7 @@ export interface Meta {
   id: string;
   nombre: string;
   areaId: string;
+  indicadorId?: string;
   valorObjetivo: number;
   valorActual: number;
   estado: EstadoMeta;
@@ -96,6 +97,7 @@ export interface Meta {
 export interface CreateMetaPayload {
   nombre: string;
   areaId: string;
+  indicadorId?: string;
   valorObjetivo: number;
   valorActual: number;
   fechaLimite: string;
@@ -104,6 +106,7 @@ export interface CreateMetaPayload {
 export interface UpdateMetaPayload {
   nombre?: string;
   areaId?: string;
+  indicadorId?: string;
   valorObjetivo?: number;
   valorActual?: number;
   fechaLimite?: string;
@@ -166,6 +169,11 @@ export async function createKpi(payload: CreateKpiPayload): Promise<KpiRaw> {
   return handleResponse<KpiRaw>(res);
 }
 
+export async function getKpiPorId(id: string): Promise<KpiRaw> {
+  const res = await fetch(`${MS}/api/kpis/${id}`);
+  return handleResponse<KpiRaw>(res);
+}
+
 export async function actualizarKpi(id: string, valor: number): Promise<KpiRaw> {
   const res = await fetch(`${MS}/api/kpis/${id}`, {
     method: 'PATCH',
@@ -178,6 +186,13 @@ export async function actualizarKpi(id: string, valor: number): Promise<KpiRaw> 
 export async function getHistorialKpi(id: string): Promise<any[]> {
   const res = await fetch(`${MS}/api/kpis/${id}/historial`);
   return handleResponse<any[]>(res);
+}
+
+export async function eliminarKpi(id: string): Promise<{ mensaje: string }> {
+  const res = await fetch(`${MS}/api/kpis/${id}`, {
+    method: 'DELETE',
+  });
+  return handleResponse<{ mensaje: string }>(res);
 }
 
 /* ══════════════════════════════════════════════════════════════

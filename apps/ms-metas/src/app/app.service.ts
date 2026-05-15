@@ -28,8 +28,18 @@ export class AppService {
 
   async obtenerTodas(): Promise<any[]> {
     const metas = await this.metaRepository.find();
-    // Podríamos actualizar los valores actuales aquí también si quisiéramos datos "en vivo"
-    return metas.map((meta) => {
+    
+    // Sincronizar con MS-KPIs en tiempo real para todas las metas que tengan link
+    const promesas = metas.map(async (meta) => {
+      if (meta.indicadorId) {
+        try {
+          const valorReal = await this.kpiApiFacade.obtenerValorActual(meta.indicadorId);
+          meta.valorActual = valorReal;
+        } catch (e) {
+          console.warn(`No se pudo refrescar KPI ${meta.indicadorId} para meta ${meta.id}`);
+        }
+      }
+      
       const porcentaje = (meta.valorActual / meta.valorObjetivo) * 100;
       return {
         ...meta,
@@ -37,6 +47,8 @@ export class AppService {
         estado: this.calcularEstado(meta.valorActual, meta.valorObjetivo, meta.fechaLimite),
       };
     });
+
+    return Promise.all(promesas);
   }
 
   async obtenerPorId(id: string): Promise<any> {

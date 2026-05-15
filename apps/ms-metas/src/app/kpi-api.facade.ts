@@ -21,10 +21,11 @@ export class KpiApiFacade {
       await firstValueFrom(this.httpService.get(`${this.baseUrl}/${indicadorId}`));
       return true;
     } catch (error) {
+      console.error(`Error de conexión con MS-KPIs en ${this.baseUrl}/${indicadorId}:`, error.message);
       if (error.response?.status === 404) {
         throw new NotFoundException(`El indicador con ID ${indicadorId} no existe en el sistema de KPIs`);
       }
-      throw new InternalServerErrorException('Error al validar el indicador con el microservicio externo');
+      throw new InternalServerErrorException(`Error de conexión con MS-KPIs: ${error.message}`);
     }
   }
 

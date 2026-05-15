@@ -1,6 +1,6 @@
 import React from 'react';
 import { SectionHeader, KpiCard } from '../DashboardComponents';
-import { KpiGateway, KpiRaw, CreateKpiPayload } from '../../api';
+import { KpiGateway, KpiRaw, CreateKpiPayload, eliminarKpi } from '../../api';
 
 /* ── View KPIs ── */
 export function KpiListView({ gwKpis, onRefresh }: { gwKpis: any, onRefresh: () => void }) {
@@ -18,6 +18,16 @@ export function KpiListView({ gwKpis, onRefresh }: { gwKpis: any, onRefresh: () 
 }
 
 export function KpiRawView({ rawKpis, onRefresh }: { rawKpis: any, onRefresh: () => void }) {
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Eliminar KPI e historial?')) return;
+    try {
+      await eliminarKpi(id);
+      onRefresh();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
   return (
     <section className="content-section">
       <SectionHeader title="KPIs Raw" desc="GET /api/kpis · Directo a ms-kpis (:3001)"
@@ -25,15 +35,28 @@ export function KpiRawView({ rawKpis, onRefresh }: { rawKpis: any, onRefresh: ()
       {rawKpis.error && <div className="alert-error">{rawKpis.error}</div>}
       <div className="table-wrapper">
         <table className="kpi-table">
-          <thead><tr><th>ID</th><th>NOMBRE</th><th>VALOR</th><th>ÁREA</th><th>FECHA</th></tr></thead>
+          <thead><tr><th>ID</th><th>NOMBRE</th><th>VALOR</th><th>ÁREA</th><th>FECHA</th><th>ACCIONES</th></tr></thead>
           <tbody>
             {rawKpis.data?.map((k: KpiRaw) => (
               <tr key={k.id}>
-                <td className="mono">{k.id.slice(0, 8)}…</td>
+                <td className="mono" style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                  <span title={k.id}>{k.id.slice(0, 8)}</span>
+                  <button 
+                    onClick={() => { navigator.clipboard.writeText(k.id); alert('ID Copiado'); }}
+                    style={{padding: '2px 4px', fontSize: '0.6rem', background: 'var(--accent)', border: 'none', borderRadius: '3px', cursor: 'pointer', color: 'black'}}
+                  >
+                    COPY
+                  </button>
+                </td>
                 <td>{k.nombre}</td>
                 <td className="mono">{k.valor.toLocaleString('es-CL')}</td>
                 <td><span className="area-tag">{k.areaId}</span></td>
                 <td className="mono">{new Date(k.fechaCreacion).toLocaleString('es-CL')}</td>
+                <td>
+                  <button onClick={() => handleDelete(k.id)} style={{background: 'var(--red)', color: 'white', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer'}}>
+                    ELIMINAR
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

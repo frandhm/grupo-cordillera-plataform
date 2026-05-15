@@ -46,7 +46,7 @@ export function DashboardPage({ token, onLogout }: Props) {
   const [eqForm, setEqForm] = useState(emptyEq);
   const [eqState, setEqState] = useState({ creating: false, ok: '', err: '' });
 
-  const emptyMeta: CreateMetaPayload = { nombre: '', areaId: '', valorObjetivo: 0, valorActual: 0, fechaLimite: '' };
+  const emptyMeta: CreateMetaPayload = { nombre: '', areaId: '', indicadorId: '', valorObjetivo: 0, valorActual: 0, fechaLimite: '' };
   const [metaForm, setMetaForm] = useState(emptyMeta);
   const [editMetaId, setEditMetaId] = useState<string | null>(null);
   const [metaState, setMetaState] = useState({ creating: false, ok: '', err: '' });
@@ -96,7 +96,14 @@ export function DashboardPage({ token, onLogout }: Props) {
   };
 
   const handleEditarMeta = (meta: Meta) => {
-    setMetaForm({ nombre: meta.nombre, areaId: meta.areaId, valorObjetivo: meta.valorObjetivo, valorActual: meta.valorActual, fechaLimite: meta.fechaLimite });
+    setMetaForm({ 
+      nombre: meta.nombre, 
+      areaId: meta.areaId, 
+      indicadorId: meta.indicadorId || '', 
+      valorObjetivo: meta.valorObjetivo, 
+      valorActual: meta.valorActual, 
+      fechaLimite: meta.fechaLimite 
+    });
     setEditMetaId(meta.id);
     setTab('crear-meta');
   };
@@ -160,7 +167,18 @@ export function DashboardPage({ token, onLogout }: Props) {
             <div key={group.label}>
               <div className="nav-section-label">{group.label}</div>
               {group.items.map(n => (
-                <button key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`} onClick={() => setTab(n.id)}>
+                <button key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`} 
+                  onClick={() => {
+                    setTab(n.id);
+                    if (n.id === 'crear-meta' && !editMetaId) {
+                      setMetaForm(emptyMeta);
+                    }
+                    if (n.id === 'crear-meta' && editMetaId) {
+                       // Si pulsa "Crear" estando en edición, reseteamos para crear una nueva
+                       setEditMetaId(null);
+                       setMetaForm(emptyMeta);
+                    }
+                  }}>
                   <span className="nav-icon">{n.icon}</span>
                   <span><div className="nav-label">{n.label}</div><div className="nav-sub">{n.sub}</div></span>
                 </button>
@@ -186,7 +204,7 @@ export function DashboardPage({ token, onLogout }: Props) {
         {tab === 'crear-equipo' && <EquipoCreateForm form={eqForm} setForm={setEqForm} onSubmit={handleCreateEquipo} creating={eqState.creating} ok={eqState.ok} err={eqState.err} />}
         {tab === 'raw-eq'       && <EquipoRawView rawEq={rawEq} onRefresh={rawEq.load} />}
 
-        {tab === 'metas'        && <MetaListView metas={metas} onRefresh={metas.load} onEditar={handleEditarMeta} onEliminar={handleEliminarMeta} />}
+        {tab === 'metas'        && <MetaListView metas={metas} onRefresh={metas.load} onEditar={handleEditarMeta} onEliminar={handleEliminarMeta} onCrear={() => setTab('crear-meta')} />}
         {tab === 'crear-meta'   && <MetaCreateForm form={metaForm} setForm={setMetaForm} onSubmit={handleCreateMeta} creating={metaState.creating} ok={metaState.ok} err={metaState.err} editMetaId={editMetaId} onCancel={() => { setEditMetaId(null); setMetaForm(emptyMeta); setTab('metas'); }} />}
 
         {tab === 'resumen'      && <ResumenSection resumen={resumen} onRefresh={resumen.load} />}

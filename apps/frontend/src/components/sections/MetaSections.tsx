@@ -1,17 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SectionHeader, MetaCard } from '../DashboardComponents';
-import { Meta, CreateMetaPayload } from '../../api';
+import { Meta, CreateMetaPayload, getKpiPorId } from '../../api';
 
-export function MetaListView({ metas, onRefresh, onEditar, onEliminar }: {
+export function MetaListView({ metas, onRefresh, onEditar, onEliminar, onCrear }: {
   metas: any;
   onRefresh: () => void;
   onEditar: (m: Meta) => void;
   onEliminar: (id: string) => void;
+  onCrear: () => void;
 }) {
   return (
     <section className="content-section">
-      <SectionHeader title="Metas" desc="GET /api/metas · ms-metas (:3002)"
-        badge="Sin Autenticación" badgeType="open" onRefresh={onRefresh} loading={metas.loading} />
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+        <SectionHeader title="Metas" desc="GET /api/metas · ms-metas (:3002)"
+          badge="Sin Autenticación" badgeType="open" onRefresh={onRefresh} loading={metas.loading} />
+        <button className="btn-create" style={{marginTop: 0, padding: '0.5rem 1rem'}} onClick={onCrear}>+ NUEVA META</button>
+      </div>
       <div className="kpi-grid">
         {metas.data?.map((m: Meta) => (
           <MetaCard key={m.id} meta={m} onEditar={onEditar} onEliminar={onEliminar} />
@@ -31,32 +35,87 @@ export function MetaCreateForm({ form, setForm, onSubmit, creating, ok, err, edi
   editMetaId: string | null;
   onCancel: () => void;
 }) {
+  const [percentMode, setPercentMode] = useState(false);
+  const [percentValue, setPercentValue] = useState(15);
+  const [calcLoading, setCalcLoading] = useState(false);
+
+  const handleCalcPercent = async () => {
+    if (!form.indicadorId) {
+      alert('Debes ingresar un Indicador ID para calcular el aumento');
+      return;
+    }
+    setCalcLoading(true);
+    try {
+      const kpi = await getKpiPorId(form.indicadorId);
+      const factor = 1 + (percentValue / 100);
+      const nuevoObjetivo = Math.round(kpi.valor * factor);
+      setForm((f: any) => ({ 
+        ...f, 
+        valorActual: kpi.valor, 
+        valorObjetivo: nuevoObjetivo,
+        nombre: f.nombre || `${percentValue}% más en ${kpi.nombre}`
+      }));
+    } catch (e) {
+      alert('No se pudo obtener el valor del KPI para el cálculo');
+    } finally {
+      setCalcLoading(false);
+    }
+  };
+
   return (
-    <section className="content-section">
+    <section className="content-section animated-fade-in">
       <SectionHeader 
         title={editMetaId ? 'Editar Meta' : 'Crear Nueva Meta'} 
         desc={`${editMetaId ? 'PUT' : 'POST'} /api/metas · ms-metas (:3002)`}
-        badge="Sin Autenticación" badgeType="open" 
-      />
+        badge="Sin Autenticación" badgeType="open" />
+      
       <form className="create-form" onSubmit={onSubmit}>
         <div className="field-group">
           <label>NOMBRE DE LA META</label>
-          <input type="text" value={form.nombre} required placeholder="Ej: Meta de Ventas Q4"
+          <input type="text" value={form.nombre} required placeholder="Ej: Aumentar Ventas 15%"
             onChange={e => setForm((f: any) => ({ ...f, nombre: e.target.value }))} />
         </div>
         <div className="field-group">
-          <label>INDICADOR ID (KPI)</label>
-          <input type="text" value={form.areaId} required placeholder="ID del área o indicador a trackear"
+          <label>ÁREA / DEPARTAMENTO</label>
+          <input type="text" value={form.areaId} required placeholder="Ej: Ventas"
             onChange={e => setForm((f: any) => ({ ...f, areaId: e.target.value }))} />
         </div>
+        <div className="field-group">
+          <label>INDICADOR ID (KPI A TRACKEAR)</label>
+          <input type="text" value={form.indicadorId} placeholder="ID del KPI en MS-KPIs (Opcional)"
+            onChange={e => setForm((f: any) => ({ ...f, indicadorId: e.target.value }))} />
+          <p className="nav-sub" style={{marginTop: '4px'}}>Si incluyes un ID de KPI, el valor actual se sincronizará automáticamente.</p>
+        </div>
+        <div className="field-row" style={{display: 'flex', gap: '1rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)'}}>
+          <div style={{flex: 1}}>
+            <label style={{fontSize: '0.6rem', color: 'var(--accent)', fontWeight: 'bold'}}>TIPO DE META</label>
+            <div style={{display: 'flex', gap: '0.5rem', marginTop: '0.5rem'}}>
+              <button type="button" className={`nav-item ${!percentMode ? 'active' : ''}`} style={{padding: '5px 10px', fontSize: '0.7rem'}} onClick={() => setPercentMode(false)}>VALOR FIJO</button>
+              <button type="button" className={`nav-item ${percentMode ? 'active' : ''}`} style={{padding: '5px 10px', fontSize: '0.7rem'}} onClick={() => setPercentMode(true)}>INCREMENTO %</button>
+            </div>
+          </div>
+          {percentMode && (
+            <div style={{flex: 1, display: 'flex', gap: '0.5rem', alignItems: 'flex-end'}}>
+              <div className="field-group" style={{marginBottom: 0}}>
+                <label>% AUMENTO</label>
+                <input type="number" value={percentValue} onChange={e => setPercentValue(parseFloat(e.target.value) || 0)} style={{width: '80px'}} />
+              </div>
+              <button type="button" className="btn-refresh" onClick={handleCalcPercent} disabled={calcLoading} style={{height: '38px'}}>
+                {calcLoading ? '...' : 'CALCULAR'}
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="field-row" style={{display: 'flex', gap: '1rem'}}>
           <div className="field-group" style={{flex: 1}}>
-            <label>VALOR OBJETIVO</label>
+            <label>VALOR OBJETIVO (META)</label>
             <input type="number" value={form.valorObjetivo === 0 ? '' : form.valorObjetivo} required
               onChange={e => setForm((f: any) => ({ ...f, valorObjetivo: parseFloat(e.target.value) || 0 }))} />
+            {percentMode && <p className="nav-sub">Calculado automáticamente</p>}
           </div>
           <div className="field-group" style={{flex: 1}}>
-            <label>VALOR ACTUAL</label>
+            <label>VALOR ACTUAL (INICIO)</label>
             <input type="number" value={form.valorActual} required
               onChange={e => setForm((f: any) => ({ ...f, valorActual: parseFloat(e.target.value) || 0 }))} />
           </div>
@@ -68,12 +127,12 @@ export function MetaCreateForm({ form, setForm, onSubmit, creating, ok, err, edi
         </div>
         {err && <div className="alert-error">{err}</div>}
         {ok  && <div className="alert-success">{ok}</div>}
-        <div style={{display: 'flex', gap: '1rem'}}>
+        <div style={{display: 'flex', gap: '0.75rem', marginTop: '1rem'}}>
           <button type="submit" className="btn-create" style={{flex: 2}} disabled={creating}>
-            {creating ? 'GUARDANDO...' : (editMetaId ? 'ACTUALIZAR META' : '+ CREAR META')}
+            {creating ? 'GUARDANDO...' : (editMetaId ? 'GUARDAR CAMBIOS' : 'CREAR META')}
           </button>
           {editMetaId && (
-            <button type="button" className="btn-refresh" style={{flex: 1}} onClick={onCancel}>
+            <button type="button" className="btn-cancel" style={{flex: 1}} onClick={onCancel}>
               CANCELAR
             </button>
           )}

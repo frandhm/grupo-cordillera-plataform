@@ -63,25 +63,25 @@ export function MetricSection() {
     return (
       <section className="content-section animated-fade-in">
         <div style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem'}}>
-          <button className="btn-refresh" onClick={() => setSelectedKpi(null)}>← VOLVER</button>
-          <h2 style={{margin: 0}}>{selectedKpi.nombre}</h2>
+          <button className="btn-back" onClick={() => setSelectedKpi(null)}>← VOLVER</button>
+          <h2 style={{margin: 0, fontSize: '1.5rem'}}>{selectedKpi.nombre}</h2>
         </div>
 
         <div className="create-layout" style={{gridTemplateColumns: '1fr 1.5fr', gap: '2rem', display: 'grid'}}>
           {/* Panel Izquierdo: Registrar */}
           <div className="create-form">
-            <h3 style={{marginBottom: '1rem'}}>Registrar Nuevo Valor</h3>
+            <h3 style={{marginBottom: '1rem'}}>Añadir a la Medición</h3>
             <div className="field-group">
-              <label>VALOR ACTUAL ({selectedKpi.unidadMedicion || 'unidades'})</label>
+              <label>VALOR A SUMAR ({selectedKpi.unidadMedicion || 'unidades'})</label>
               <input 
                 type="number" 
                 value={newValue} 
-                placeholder="Ej: 5000"
+                placeholder="Ej: +500"
                 onChange={e => setNewValue(e.target.value)} 
               />
             </div>
             <button className="btn-create" onClick={handleAddValue} disabled={updating}>
-              {updating ? 'REGISTRANDO...' : 'GUARDAR MEDICIÓN'}
+              {updating ? 'AÑADIENDO...' : 'SUMAR AL TOTAL'}
             </button>
             <div style={{marginTop: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px'}}>
               <div style={{fontSize: '0.8rem', color: 'var(--text-dim)'}}>ÚLTIMO VALOR</div>
@@ -136,7 +136,15 @@ export function MetricSection() {
           <div key={k.id} className="kpi-card metric-card" onClick={() => handleSelectKpi(k)}>
             <div className="kpi-card-top">
               <span className="kpi-area">{k.areaId}</span>
-              <span className="kpi-status status-ok">Ver Detalles →</span>
+              <span className="kpi-status status-ok" style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(k.id); alert('ID Copiado'); }}
+                  style={{padding: '2px 6px', fontSize: '0.6rem', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-dim)', borderRadius: '4px'}}
+                >
+                  COPY ID
+                </button>
+                Ver Detalles →
+              </span>
             </div>
             <div className="kpi-nombre">{k.nombre}</div>
             <div className="kpi-valor">{k.valor.toLocaleString('es-CL')} <span style={{fontSize: '0.8rem', fontWeight: 'normal'}}>{k.unidadMedicion}</span></div>
@@ -151,7 +159,15 @@ export function MetricSection() {
           <div key={k.id} className="kpi-card metric-card" onClick={() => handleSelectKpi(k)}>
             <div className="kpi-card-top">
               <span className="kpi-area">{k.areaId}</span>
-              <span className="kpi-status status-progress">Ver Detalles →</span>
+              <span className="kpi-status status-progress" style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(k.id); alert('ID Copiado'); }}
+                  style={{padding: '2px 6px', fontSize: '0.6rem', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-dim)', borderRadius: '4px'}}
+                >
+                  COPY ID
+                </button>
+                Ver Detalles →
+              </span>
             </div>
             <div className="kpi-nombre">{k.nombre}</div>
             <div className="kpi-valor">{k.valor.toLocaleString('es-CL')} <span style={{fontSize: '0.8rem', fontWeight: 'normal'}}>{k.unidadMedicion}</span></div>

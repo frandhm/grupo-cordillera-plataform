@@ -52,16 +52,23 @@ export class AppService {
     });
   }
 
+  async obtenerPorId(id: string): Promise<KpiEntity> {
+    const kpi = await this.kpiRepository.findOne({ where: { id } });
+    if (!kpi) throw new NotFoundException('KPI no encontrado');
+    return kpi;
+  }
+
   async actualizarValor(id: string, nuevoValor: number) {
     const kpi = await this.kpiRepository.findOne({ where: { id } });
     if (!kpi) throw new NotFoundException('KPI no encontrado');
 
-    kpi.valor = nuevoValor;
+    const valorAnterior = kpi.valor;
+    kpi.valor = Number(valorAnterior) + Number(nuevoValor);
+    
     await this.kpiRepository.save(kpi);
 
-    // Registrar en historial
     await this.medicionRepository.save(this.medicionRepository.create({
-      valor: nuevoValor,
+      valor: kpi.valor,
       kpi: kpi
     }));
 
@@ -73,5 +80,13 @@ export class AppService {
       where: { kpi: { id } },
       order: { fecha: 'DESC' }
     });
+  }
+
+  async eliminarKpi(id: string) {
+    const kpi = await this.kpiRepository.findOne({ where: { id } });
+    if (!kpi) throw new NotFoundException('KPI no encontrado');
+    await this.medicionRepository.delete({ kpi: { id } });
+    await this.kpiRepository.remove(kpi);
+    return { mensaje: 'KPI y su historial eliminados' };
   }
 }

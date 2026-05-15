@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller('kpis')
@@ -8,6 +8,11 @@ export class AppController {
   @Get()
   async obtenerKpis() {
     return await this.kpiService.obtenerTodos();
+  }
+
+  @Get(':id')
+  async obtenerPorId(@Param('id') id: string) {
+    return await this.kpiService.obtenerPorId(id);
   }
 
   @Post()
@@ -23,5 +28,10 @@ export class AppController {
   @Get(':id/historial')
   async obtenerHistorial(@Param('id') id: string) {
     return await this.kpiService.obtenerHistorial(id);
+  }
+
+  @Delete(':id')
+  async eliminarKpi(@Param('id') id: string) {
+    return await this.kpiService.eliminarKpi(id);
   }
 }
