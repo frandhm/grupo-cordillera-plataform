@@ -1,21 +1,19 @@
 /**
  * API Client — Grupo Cordillera
  *
- * Proxies Vite (orden importa: más específicos primero):
- *   /gw    → :3000  API Gateway
- *   /ms-eq → :3003  ms-equipos  (antes que /ms para evitar match incorrecto)
- *   /ms-mt → :3002  ms-metas    (antes que /ms para evitar match incorrecto)
- *   /ms    → :3001  ms-kpis
+ * Rutas (resueltas por el proxy de Vite):
+ *   /gw    →  http://localhost:3000  (API Gateway)
+ *   /ms    →  http://localhost:3001  (ms-kpis directo)
+ *   /ms-eq →  http://localhost:3003  (ms-equipos directo)
  */
+// MS-Equipos   (:3003)
 
-const GW    = '/gw';
-const MS    = '/ms';
+const GW = '/gw';
+const MS = '/ms';
 const MS_EQ = '/ms-eq';
 const MS_MT = '/ms-mt';
 
-/* ══════════════════════════════════════════════════════════════
-   TYPES
-══════════════════════════════════════════════════════════════ */
+/* ── Types ──────────────────────────────────────────────────── */
 
 export interface LoginResponse {
   access_token: string;
@@ -50,16 +48,27 @@ export interface Equipo {
   id: number;
   nombre: string;
   lider: string;
-  departamento: string;
+  areaId: string;
+  area?: Area;
   cantidadIntegrantes: number;
   fechaCreacion: string;
+}
+
+export interface Area {
+  id: string;
+  nombre: string;
+  equipos?: Equipo[];
 }
 
 export interface CreateEquipoPayload {
   nombre: string;
   lider: string;
-  departamento: string;
+  areaId: string;
   cantidadIntegrantes: number;
+}
+
+export interface CreateAreaPayload {
+  nombre: string;
 }
 
 export type EstadoMeta = 'EN_PROGRESO' | 'CUMPLIDA' | 'NO_CUMPLIDA';
@@ -107,9 +116,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   AUTH — Gateway :3000
-══════════════════════════════════════════════════════════════ */
+/* ── Auth ───────────────────────────────────────────────────── */
 
 export async function login(usuario: string, clave: string): Promise<LoginResponse> {
   const res = await fetch(`${GW}/api/auth/login`, {
@@ -120,9 +127,7 @@ export async function login(usuario: string, clave: string): Promise<LoginRespon
   return handleResponse<LoginResponse>(res);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   KPIs — Gateway :3000 (con JWT)
-══════════════════════════════════════════════════════════════ */
+/* ── Gateway KPIs ───────────────────────────────────────────── */
 
 export async function getGatewayKpis(token: string): Promise<KpiGateway[]> {
   const res = await fetch(`${GW}/api/dashboard/kpis`, {
@@ -131,9 +136,31 @@ export async function getGatewayKpis(token: string): Promise<KpiGateway[]> {
   return handleResponse<KpiGateway[]>(res);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   KPIs — ms-kpis :3001 (directo, sin auth)
-══════════════════════════════════════════════════════════════ */
+/* ── Gateway Equipos ────────────────────────────────────────── */
+
+export async function getGatewayEquipos(token: string): Promise<Equipo[]> {
+  const res = await fetch(`${GW}/api/dashboard/equipos`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<Equipo[]>(res);
+}
+
+export async function crearEquipoGateway(
+  token: string,
+  payload: CreateEquipoPayload
+): Promise<Equipo> {
+  const res = await fetch(`${GW}/api/dashboard/equipos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<Equipo>(res);
+}
+
+/* ── MS-KPIs directo ────────────────────────────────────────── */
 
 export async function getMsKpis(): Promise<KpiRaw[]> {
   const res = await fetch(`${MS}/api/kpis`);
@@ -149,23 +176,7 @@ export async function createKpi(payload: CreateKpiPayload): Promise<KpiRaw> {
   return handleResponse<KpiRaw>(res);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   EQUIPOS — Gateway :3000 (GET con JWT)
-══════════════════════════════════════════════════════════════ */
-
-export async function getGatewayEquipos(token: string): Promise<Equipo[]> {
-  const res = await fetch(`${GW}/api/dashboard/equipos`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return handleResponse<Equipo[]>(res);
-}
-
-/* ══════════════════════════════════════════════════════════════
-   EQUIPOS — ms-equipos :3003 (directo, sin auth)
-   BUG FIX: El gateway POST /dashboard/equipos llama internamente
-   a :3002 (que es ms-metas, no ms-equipos). Para crear equipos
-   correctamente hay que ir directo al microservicio en :3003.
-══════════════════════════════════════════════════════════════ */
+/* ── MS-Equipos directo ─────────────────────────────────────── */
 
 export async function getMsEquipos(): Promise<Equipo[]> {
   const res = await fetch(`${MS_EQ}/api/equipos`);
@@ -218,4 +229,22 @@ export async function eliminarMeta(id: string): Promise<{ mensaje: string }> {
     method: 'DELETE',
   });
   return handleResponse<{ mensaje: string }>(res);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AREAS — ms-equipos :3003
+══════════════════════════════════════════════════════════════ */
+
+export async function getMsAreas(): Promise<Area[]> {
+  const res = await fetch(`${MS_EQ}/api/areas`);
+  return handleResponse<Area[]>(res);
+}
+
+export async function crearArea(payload: CreateAreaPayload): Promise<Area> {
+  const res = await fetch(`${MS_EQ}/api/areas`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<Area>(res);
 }
