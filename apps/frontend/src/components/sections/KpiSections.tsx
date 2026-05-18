@@ -102,6 +102,18 @@ export function KpiCreateForm({ form, setForm, onSubmit, creating, ok, err }: {
             <textarea value={form.descripcion} placeholder="Opcional"
               onChange={e => setForm((f: any) => ({ ...f, descripcion: e.target.value }))} />
           </div>
+          <div className="field-row" style={{display: 'flex', gap: '1rem'}}>
+            <div className="field-group" style={{flex: 1}}>
+              <label>EQUIPO RESPONSABLE (ID)</label>
+              <input type="text" value={form.equipoId || ''} placeholder="Ej: equipo-ventas-sur"
+                onChange={e => setForm((f: any) => ({ ...f, equipoId: e.target.value }))} />
+            </div>
+            <div className="field-group" style={{flex: 1}}>
+              <label>RESPONSABLE (NOMBRE)</label>
+              <input type="text" value={form.responsable || ''} placeholder="Ej: Juan Pérez"
+                onChange={e => setForm((f: any) => ({ ...f, responsable: e.target.value }))} />
+            </div>
+          </div>
           <div className="field-group">
             <label>UNIDAD DE MEDICIÓN</label>
             <input type="text" value={form.unidadMedicion} required placeholder="Ej: CLP, %, Unidades"

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MetaEntity } from './meta.entity';
 import { KpiApiFacade } from './kpi-api.facade';
+import { KpiAdapter } from './kpi.adapter';
 
 @Injectable()
 export class AppService {
@@ -16,9 +17,13 @@ export class AppService {
     // REGLA DE NEGOCIO: Validar que el indicador exista
     if (datos.indicadorId) {
       await this.kpiApiFacade.validarIndicador(datos.indicadorId);
-      // Opcional: Si no envían valor actual, lo traemos del microservicio
+      // Opcional: Si no envían valor actual, lo traemos del microservicio y lo adaptamos
       if (datos.valorActual === undefined || datos.valorActual === 0) {
-        datos.valorActual = await this.kpiApiFacade.obtenerValorActual(datos.indicadorId);
+        const raw = await this.kpiApiFacade.obtenerKpiRaw(datos.indicadorId);
+        if (raw) {
+          const adapted = KpiAdapter.adapt(raw);
+          datos.valorActual = adapted.valorActual;
+        }
       }
     }
 
@@ -33,8 +38,11 @@ export class AppService {
     const promesas = metas.map(async (meta) => {
       if (meta.indicadorId) {
         try {
-          const valorReal = await this.kpiApiFacade.obtenerValorActual(meta.indicadorId);
-          meta.valorActual = valorReal;
+          const raw = await this.kpiApiFacade.obtenerKpiRaw(meta.indicadorId);
+          if (raw) {
+            const adapted = KpiAdapter.adapt(raw);
+            meta.valorActual = adapted.valorActual;
+          }
         } catch (e) {
           console.warn(`No se pudo refrescar KPI ${meta.indicadorId} para meta ${meta.id}`);
         }
@@ -55,9 +63,13 @@ export class AppService {
     const meta = await this.metaRepository.findOne({ where: { id } });
     if (!meta) throw new NotFoundException(`Meta con id ${id} no encontrada`);
     
-    // Si tiene indicadorId, refrescamos el valor actual desde el MS-KPIs
+    // Si tiene indicadorId, refrescamos el valor actual desde el MS-KPIs usando el Adapter
     if (meta.indicadorId) {
-      meta.valorActual = await this.kpiApiFacade.obtenerValorActual(meta.indicadorId);
+      const raw = await this.kpiApiFacade.obtenerKpiRaw(meta.indicadorId);
+      if (raw) {
+        const adapted = KpiAdapter.adapt(raw);
+        meta.valorActual = adapted.valorActual;
+      }
     }
 
     const porcentaje = (meta.valorActual / meta.valorObjetivo) * 100;

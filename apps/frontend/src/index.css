@@ -34,6 +34,81 @@ body {
   overflow: hidden;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN PAGE
+   ═══════════════════════════════════════════════════════════════ */
+.login-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mountain-svg {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+.login-center {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.login-brand { text-align: center; }
+.brand-eyebrow { font-size: 0.6rem; color: var(--accent); letter-spacing: 3px; font-weight: 800; display: block; margin-bottom: 0.5rem; }
+.brand-title { font-size: 4rem; font-weight: 900; letter-spacing: 2px; color: #fff; line-height: 1; }
+.brand-sub { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 1px; display: block; margin-top: 0.5rem; }
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+
+.login-card-header { text-align: center; margin-bottom: 2rem; }
+.login-icon { font-size: 2rem; color: var(--accent); display: block; margin-bottom: 0.5rem; }
+.login-card-header h2 { font-size: 1.1rem; color: #fff; font-weight: 700; }
+.login-card-header p { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem; }
+
+.login-form { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.btn-login {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--radius);
+  padding: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+}
+
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 240, 255, 0.2); }
+.btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.error-msg { background: rgba(255, 77, 77, 0.1); color: var(--red); padding: 0.75rem; border-radius: 8px; font-size: 0.8rem; border: 1px solid rgba(255, 77, 77, 0.2); }
+.login-footer { margin-top: 1.5rem; text-align: center; }
+.endpoint-tag { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-faint); }
+
 /* ─── Dashboard Layout ───────────────────────────────────────── */
 .dash-root {
   display: flex;
@@ -269,6 +344,9 @@ body {
 
 .alert-success { background: rgba(0, 212, 170, 0.1); color: var(--teal); padding: 1rem; border-radius: 8px; border: 1px solid rgba(0, 212, 170, 0.2); }
 .alert-error { background: rgba(255, 77, 77, 0.1); color: var(--red); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255, 77, 77, 0.2); }
+
+.area-tag { background: var(--surface-2); padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; color: var(--text-muted); border: 1px solid var(--border); }
+.team-tag { background: rgba(0, 240, 255, 0.1); padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; color: var(--accent); border: 1px solid rgba(0, 240, 255, 0.2); }
 
 /* Sidebar Footer Fixed */
 .sidebar-footer {

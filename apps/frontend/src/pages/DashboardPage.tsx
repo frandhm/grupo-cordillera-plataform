@@ -14,13 +14,13 @@ import { KpiListView, KpiRawView, KpiCreateForm } from '../components/sections/K
 import { EquipoListView, EquipoCreateForm, EquipoRawView } from '../components/sections/EquipoSections';
 import { MetaListView, MetaCreateForm } from '../components/sections/MetaSections';
 import { MetricSection } from '../components/sections/MetricSection';
-import { ResumenSection } from '../components/sections/ResumenSection';
+import { LogsSection } from '../components/sections/LogsSection';
 
 type Tab =
   | 'gateway-kpis' | 'raw-kpis'    | 'create-kpi'
   | 'gateway-eq'   | 'crear-equipo' | 'raw-eq'
   | 'metas'        | 'crear-meta'   | 'editar-meta'
-  | 'resumen'      | 'metricas';
+  | 'metricas'     | 'logs';
 
 interface Props { token: string; onLogout: () => void; }
 
@@ -35,7 +35,6 @@ export function DashboardPage({ token, onLogout }: Props) {
   const gwEq   = useAsyncData(() => getGatewayEquipos(token), [token]);
   const rawEq  = useAsyncData(getMsEquipos, []);
   const metas  = useAsyncData(getMsMetas, []);
-  const resumen = useAsyncData(() => getResumenConsolidado(token), [token]);
 
   /* Forms State */
   const emptyKpi: CreateKpiPayload = { nombre: '', valor: 0, areaId: '', descripcion: '', unidadMedicion: '' };
@@ -56,7 +55,7 @@ export function DashboardPage({ token, onLogout }: Props) {
     const loaders: Record<string, () => void> = {
       'gateway-kpis': gwKpis.load, 'raw-kpis': rawKpis.load,
       'gateway-eq': gwEq.load, 'raw-eq': rawEq.load,
-      'metas': metas.load, 'resumen': resumen.load
+      'metas': metas.load
     };
     if (loaders[tab]) loaders[tab]();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,7 +66,7 @@ export function DashboardPage({ token, onLogout }: Props) {
     e.preventDefault();
     setKpiState({ creating: true, ok: '', err: '' });
     try {
-      const k = await createKpi(kpiForm);
+      const k = await createKpi(kpiForm, token);
       setKpiState({ creating: false, ok: `✓ KPI creado — ID: ${k.id}`, err: '' });
       setKpiForm(emptyKpi);
     } catch (e: any) { setKpiState({ creating: false, ok: '', err: e.message }); }
@@ -77,7 +76,7 @@ export function DashboardPage({ token, onLogout }: Props) {
     e.preventDefault();
     setEqState({ creating: true, ok: '', err: '' });
     try {
-      const eq = await crearEquipoDirecto(eqForm);
+      const eq = await crearEquipoDirecto(eqForm, token);
       setEqState({ creating: false, ok: `✓ Equipo "${eq.nombre}" creado`, err: '' });
       setEqForm(emptyEq);
     } catch (e: any) { setEqState({ creating: false, ok: '', err: e.message }); }
@@ -145,10 +144,10 @@ export function DashboardPage({ token, onLogout }: Props) {
       ]
     },
     {
-      label: 'AGREGACIÓN & NEGOCIO',
+      label: 'SISTEMA & AUDITORÍA',
       items: [
-        { id: 'resumen', icon: '⚡', label: 'Resumen BFF', sub: 'KPIs + Metas', roles: ['jefe', 'gerente'] },
-        { id: 'metricas', icon: '📊', label: 'Métricas Reales', sub: 'Ventas y Cap.', roles: ['jefe', 'gerente', 'vendedor'] },
+        { id: 'metricas', icon: '📊', label: 'Dashboard & Métricas', sub: 'Vista Consolidada', roles: ['jefe', 'gerente', 'vendedor'] },
+        { id: 'logs', icon: '📜', label: 'Logs del Sistema', sub: 'Auditoría Jefe', roles: ['jefe'] },
       ]
     }
   ];
@@ -207,8 +206,8 @@ export function DashboardPage({ token, onLogout }: Props) {
         {tab === 'metas'        && <MetaListView metas={metas} onRefresh={metas.load} onEditar={handleEditarMeta} onEliminar={handleEliminarMeta} onCrear={() => setTab('crear-meta')} />}
         {tab === 'crear-meta'   && <MetaCreateForm form={metaForm} setForm={setMetaForm} onSubmit={handleCreateMeta} creating={metaState.creating} ok={metaState.ok} err={metaState.err} editMetaId={editMetaId} onCancel={() => { setEditMetaId(null); setMetaForm(emptyMeta); setTab('metas'); }} />}
 
-        {tab === 'resumen'      && <ResumenSection resumen={resumen} onRefresh={resumen.load} />}
-        {tab === 'metricas'     && <MetricSection />}
+        {tab === 'metricas'     && <MetricSection token={token} />}
+        {tab === 'logs'         && <LogsSection token={token} />}
       </main>
     </div>
   );

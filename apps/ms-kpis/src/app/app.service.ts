@@ -13,6 +13,8 @@ class KpiFactory {
       areaId: data.areaId,
       descripcion: data.descripcion || `Indicador de ${type}`,
       unidadMedicion: data.unidadMedicion || 'unidades',
+      equipoId: data.equipoId || null,
+      responsable: data.responsable || null,
     };
   }
 }

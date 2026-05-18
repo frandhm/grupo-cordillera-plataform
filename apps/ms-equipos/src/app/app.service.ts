@@ -16,10 +16,16 @@ export class AppService {
   async crear(datos: Partial<EquipoEntity>): Promise<EquipoEntity> {
     // Verificar si el área existe o crearla (auto-gestión simple para el proyecto)
     if (datos.areaId) {
-      let area = await this.areaRepository.findOne({ where: { id: datos.areaId } });
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(datos.areaId);
+      let area = isUuid 
+        ? await this.areaRepository.findOne({ where: { id: datos.areaId } })
+        : await this.areaRepository.findOne({ where: { nombre: datos.areaId } });
+
       if (!area) {
-        area = await this.areaRepository.save(this.areaRepository.create({ id: datos.areaId, nombre: `Área ${datos.areaId}` }));
+        area = await this.areaRepository.save(this.areaRepository.create({ nombre: datos.areaId }));
       }
+      datos.areaId = area.id;
+      datos.area = area;
     }
     const nuevoEquipo = this.equipoRepository.create(datos);
     return await this.equipoRepository.save(nuevoEquipo);

@@ -15,7 +15,7 @@ export class CrearEquipoDto {
   @ApiProperty({ example: 'Comercial' })
   @IsString()
   @IsNotEmpty()
-  departamento: string;
+  areaId: string;
 
   @ApiProperty({ example: 5 })
   @IsNumber()

@@ -15,7 +15,8 @@ export class AuthGuard implements CanActivate {
 
         try {
             // Verificamos si el token es real y no ha expirado
-            await this.jwtService.verifyAsync(token, { secret: 'CLAVE_SECRETA_CORDILLERA' });
+            const payload = await this.jwtService.verifyAsync(token, { secret: 'CLAVE_SECRETA_CORDILLERA' });
+            request['user'] = payload; // Adjuntamos el usuario para los siguientes guards
             return true;
         } catch {
             throw new UnauthorizedException('Tu credencial no es válida o ya expiró');

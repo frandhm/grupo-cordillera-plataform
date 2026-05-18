@@ -29,13 +29,13 @@ export class KpiApiFacade {
     }
   }
 
-  async obtenerValorActual(indicadorId: string): Promise<number> {
+  async obtenerKpiRaw(indicadorId: string): Promise<any> {
     try {
       const { data } = await firstValueFrom(this.httpService.get(`${this.baseUrl}/${indicadorId}`));
-      return data.valor;
+      return data;
     } catch (error) {
-      console.error(`Error al obtener valor del KPI ${indicadorId}:`, error.message);
-      return 0;
+      console.error(`Error al obtener datos raw del KPI ${indicadorId}:`, error.message);
+      return null;
     }
   }
 }

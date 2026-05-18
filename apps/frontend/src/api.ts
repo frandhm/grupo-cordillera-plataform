@@ -41,6 +41,8 @@ export interface KpiRaw {
   areaId: string;
   descripcion?: string;
   unidadMedicion: string;
+  equipoId?: string;
+  responsable?: string;
   fechaCreacion: string;
 }
 
@@ -50,6 +52,8 @@ export interface CreateKpiPayload {
   areaId: string;
   descripcion?: string;
   unidadMedicion: string;
+  equipoId?: string;
+  responsable?: string;
 }
 
 export interface Equipo {
@@ -151,6 +155,13 @@ export async function getGatewayKpis(token: string): Promise<KpiGateway[]> {
   return handleResponse<KpiGateway[]>(res);
 }
 
+export async function getLogs(token: string): Promise<any[]> {
+  const res = await fetch(`${GW}/api/dashboard/logs`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<any[]>(res);
+}
+
 /* ══════════════════════════════════════════════════════════════
    KPIs — ms-kpis :3001 (directo, sin auth)
 ══════════════════════════════════════════════════════════════ */
@@ -160,10 +171,13 @@ export async function getMsKpis(): Promise<KpiRaw[]> {
   return handleResponse<KpiRaw[]>(res);
 }
 
-export async function createKpi(payload: CreateKpiPayload): Promise<KpiRaw> {
-  const res = await fetch(`${MS}/api/kpis`, {
+export async function createKpi(payload: CreateKpiPayload, token: string): Promise<KpiRaw> {
+  const res = await fetch(`${GW}/api/dashboard/kpis`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify(payload),
   });
   return handleResponse<KpiRaw>(res);
@@ -218,10 +232,13 @@ export async function getMsEquipos(): Promise<Equipo[]> {
   return handleResponse<Equipo[]>(res);
 }
 
-export async function crearEquipoDirecto(payload: CreateEquipoPayload): Promise<Equipo> {
-  const res = await fetch(`${MS_EQ}/api/equipos`, {
+export async function crearEquipoDirecto(payload: CreateEquipoPayload, token: string): Promise<Equipo> {
+  const res = await fetch(`${GW}/api/dashboard/equipos`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify(payload),
   });
   return handleResponse<Equipo>(res);

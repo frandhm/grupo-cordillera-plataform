@@ -21,6 +21,12 @@ export class KpiEntity {
     @Column({ default: 'unidades' })
     unidadMedicion: string;
 
+    @Column({ nullable: true })
+    equipoId: string;
+
+    @Column({ nullable: true })
+    responsable: string;
+
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     fechaCreacion: Date;
 
