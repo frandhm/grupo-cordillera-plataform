@@ -7,9 +7,9 @@ interface Props {
 
 export function LoginPage({ onLogin }: Props) {
   const [usuario, setUsuario] = useState('admin@cordillera.com');
-  const [clave, setClave]     = useState('123456');
+  const [clave, setClave] = useState('123456');
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +65,6 @@ export function LoginPage({ onLogin }: Props) {
           <div className="login-card-header">
             <span className="login-icon">▲</span>
             <h2>Acceso al Sistema</h2>
-            <p>Credenciales de administrador requeridas</p>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>
@@ -76,7 +75,7 @@ export function LoginPage({ onLogin }: Props) {
                 type="email"
                 value={usuario}
                 onChange={e => setUsuario(e.target.value)}
-                placeholder="email@cordillera.com"
+                placeholder=""
                 autoComplete="username"
                 required
               />
@@ -89,7 +88,7 @@ export function LoginPage({ onLogin }: Props) {
                 type="password"
                 value={clave}
                 onChange={e => setClave(e.target.value)}
-                placeholder="••••••••"
+                placeholder=""
                 autoComplete="current-password"
                 required
               />

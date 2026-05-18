@@ -20,6 +20,7 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.20.0",
+    "recharts": "^3.8.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.2",
     "typeorm": "^0.3.29"
@@ -42,6 +43,8 @@
     "@swc/helpers": "~0.5.18",
     "@types/jest": "^30.0.0",
     "@types/node": "20.19.9",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "jest": "^30.0.2",

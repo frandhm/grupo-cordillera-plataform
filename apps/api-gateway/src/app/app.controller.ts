@@ -1,11 +1,14 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'; // Imports de Swagger
+import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Request } from 'express';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { AuthGuard } from './auth.guard';
+import { RolesGuard } from './roles.guard';
+import { Roles } from './roles.decorator';
 import { LoginDto } from './dto/login.dto';
 import { CrearEquipoDto } from './dto/crear-equipo.dto';
 
-@ApiTags('Plataforma Cordillera') // Agrupa todo bajo un nombre bonito
+@ApiTags('Plataforma Cordillera')
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) { }
@@ -17,26 +20,56 @@ export class AppController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Post('dashboard/equipos')
-  @ApiOperation({ summary: 'Crear un nuevo Equipo (Requiere Token)' })
-  async crearEquipo(@Body() nuevoEquipo: CrearEquipoDto) {
-    return await this.appService.crearEquipo(nuevoEquipo);
+  @Roles('jefe')
+  @ApiOperation({ summary: 'Crear un nuevo Equipo (Solo Jefe)' })
+  async crearEquipo(@Body() nuevoEquipo: CrearEquipoDto, @Req() req: any) {
+    return await this.appService.crearEquipo(nuevoEquipo, req.user.email);
   }
 
-  @ApiBearerAuth() // <--- Esto le dice a Swagger: "Esta ruta pide Token"
-  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Post('dashboard/kpis')
+  @Roles('jefe', 'gerente')
+  @ApiOperation({ summary: 'Crear un nuevo KPI con validación de equipo' })
+  async crearKpi(@Body() datos: any, @Req() req: any) {
+    return await this.appService.crearKpi(datos, req.user.email);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Get('dashboard/kpis')
-  @ApiOperation({ summary: 'Obtener KPIs consolidados (Requiere Token)' })
+  @Roles('jefe', 'gerente', 'vendedor')
+  @ApiOperation({ summary: 'Obtener KPIs consolidados' })
   async getKpis() {
     return await this.appService.obtenerKpisDesdeMicroservicio();
   }
 
-  @ApiBearerAuth() // Le decimos a Swagger que requiere Token
-  @UseGuards(AuthGuard) // Protegemos la ruta
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Get('dashboard/equipos')
-  @ApiOperation({ summary: 'Obtener listado de Equipos (Requiere Token)' })
+  @Roles('jefe', 'gerente')
+  @ApiOperation({ summary: 'Obtener listado de Equipos (Jefe y Gerente)' })
   async getEquipos() {
     return await this.appService.obtenerEquiposDesdeMicroservicio();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Get('dashboard/resumen')
+  @Roles('jefe', 'gerente')
+  @ApiOperation({ summary: 'Obtener resumen consolidado de KPIs y Metas (BFF)' })
+  async getResumen() {
+    return await this.appService.obtenerResumenConsolidado();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Get('dashboard/logs')
+  @Roles('jefe')
+  @ApiOperation({ summary: 'Obtener logs de auditoría (Solo Jefe)' })
+  async getLogs() {
+    return await this.appService.obtenerLogs();
   }
 }

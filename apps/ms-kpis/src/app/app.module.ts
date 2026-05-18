@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { KpiEntity } from './kpi.entity';
+import { MedicionEntity } from './medicion.entity';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule, ConfigService  } from '@nestjs/config';
-import { KpiEntity } from './kpi.entity'; // Importa tu entidad
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // Esta es la pieza clave: conecta NestJS con el Postgres que creamos en Docker
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -21,12 +21,11 @@ import { KpiEntity } from './kpi.entity'; // Importa tu entidad
         username: configService.get<string>('DB_KPIS_USER'),
         password: configService.get<string>('DB_KPIS_PASSWORD'),
         database: configService.get<string>('DB_KPIS_NAME'),
-        entities: [KpiEntity],
+        entities: [KpiEntity, MedicionEntity],
         synchronize: true,
       }),
     }),
-    // Registramos la entidad para que pueda ser usada por los repositorios
-    TypeOrmModule.forFeature([KpiEntity]),
+    TypeOrmModule.forFeature([KpiEntity, MedicionEntity]),
   ],
   controllers: [AppController],
   providers: [AppService],

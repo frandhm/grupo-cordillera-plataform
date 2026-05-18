@@ -25,6 +25,8 @@ export interface KpiGateway {
   nombre: string;
   valor: number;
   areaId: string;
+  descripcion?: string;
+  unidadMedicion: string;
   fechaCreacion: string;
   cumplimiento: string;
   estado: 'META CUMPLIDA' | 'EN PROGRESO';
@@ -35,6 +37,10 @@ export interface KpiRaw {
   nombre: string;
   valor: number;
   areaId: string;
+  descripcion?: string;
+  unidadMedicion: string;
+  equipoId?: string;
+  responsable?: string;
   fechaCreacion: string;
 }
 
@@ -42,6 +48,10 @@ export interface CreateKpiPayload {
   nombre: string;
   valor: number;
   areaId: string;
+  descripcion?: string;
+  unidadMedicion: string;
+  equipoId?: string;
+  responsable?: string;
 }
 
 export interface Equipo {
@@ -77,6 +87,7 @@ export interface Meta {
   id: string;
   nombre: string;
   areaId: string;
+  indicadorId?: string;
   valorObjetivo: number;
   valorActual: number;
   estado: EstadoMeta;
@@ -88,6 +99,7 @@ export interface Meta {
 export interface CreateMetaPayload {
   nombre: string;
   areaId: string;
+  indicadorId?: string;
   valorObjetivo: number;
   valorActual: number;
   fechaLimite: string;
@@ -96,6 +108,7 @@ export interface CreateMetaPayload {
 export interface UpdateMetaPayload {
   nombre?: string;
   areaId?: string;
+  indicadorId?: string;
   valorObjetivo?: number;
   valorActual?: number;
   fechaLimite?: string;
@@ -136,7 +149,63 @@ export async function getGatewayKpis(token: string): Promise<KpiGateway[]> {
   return handleResponse<KpiGateway[]>(res);
 }
 
-/* ── Gateway Equipos ────────────────────────────────────────── */
+export async function getLogs(token: string): Promise<any[]> {
+  const res = await fetch(`${GW}/api/dashboard/logs`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<any[]>(res);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   KPIs — ms-kpis :3001 (directo, sin auth)
+══════════════════════════════════════════════════════════════ */
+
+export async function getMsKpis(): Promise<KpiRaw[]> {
+  const res = await fetch(`${MS}/api/kpis`);
+  return handleResponse<KpiRaw[]>(res);
+}
+
+export async function createKpi(payload: CreateKpiPayload, token: string): Promise<KpiRaw> {
+  const res = await fetch(`${GW}/api/dashboard/kpis`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<KpiRaw>(res);
+}
+
+export async function getKpiPorId(id: string): Promise<KpiRaw> {
+  const res = await fetch(`${MS}/api/kpis/${id}`);
+  return handleResponse<KpiRaw>(res);
+}
+
+export async function actualizarKpi(id: string, valor: number): Promise<KpiRaw> {
+  const res = await fetch(`${MS}/api/kpis/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ valor }),
+  });
+  return handleResponse<KpiRaw>(res);
+}
+
+export async function getHistorialKpi(id: string): Promise<any[]> {
+  const res = await fetch(`${MS}/api/kpis/${id}/historial`);
+  return handleResponse<any[]>(res);
+}
+
+export async function eliminarKpi(id: string): Promise<{ mensaje: string }> {
+  const res = await fetch(`${MS}/api/kpis/${id}`, {
+    method: 'DELETE',
+  });
+  return handleResponse<{ mensaje: string }>(res);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EQUIPOS — Gateway :3000 (GET con JWT)
+══════════════════════════════════════════════════════════════ */
 
 export async function getGatewayEquipos(token: string): Promise<Equipo[]> {
   const res = await fetch(`${GW}/api/dashboard/equipos`, {
@@ -145,48 +214,25 @@ export async function getGatewayEquipos(token: string): Promise<Equipo[]> {
   return handleResponse<Equipo[]>(res);
 }
 
-export async function crearEquipoGateway(
-  token: string,
-  payload: CreateEquipoPayload
-): Promise<Equipo> {
-  const res = await fetch(`${GW}/api/dashboard/equipos`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
-  return handleResponse<Equipo>(res);
-}
-
-/* ── MS-KPIs directo ────────────────────────────────────────── */
-
-export async function getMsKpis(): Promise<KpiRaw[]> {
-  const res = await fetch(`${MS}/api/kpis`);
-  return handleResponse<KpiRaw[]>(res);
-}
-
-export async function createKpi(payload: CreateKpiPayload): Promise<KpiRaw> {
-  const res = await fetch(`${MS}/api/kpis`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  return handleResponse<KpiRaw>(res);
-}
-
-/* ── MS-Equipos directo ─────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   EQUIPOS — ms-equipos :3003 (directo, sin auth)
+   BUG FIX: El gateway POST /dashboard/equipos llama internamente
+   a :3002 (que es ms-metas, no ms-equipos). Para crear equipos
+   correctamente hay que ir directo al microservicio en :3003.
+══════════════════════════════════════════════════════════════ */
 
 export async function getMsEquipos(): Promise<Equipo[]> {
   const res = await fetch(`${MS_EQ}/api/equipos`);
   return handleResponse<Equipo[]>(res);
 }
 
-export async function crearEquipoDirecto(payload: CreateEquipoPayload): Promise<Equipo> {
-  const res = await fetch(`${MS_EQ}/api/equipos`, {
+export async function crearEquipoDirecto(payload: CreateEquipoPayload, token: string): Promise<Equipo> {
+  const res = await fetch(`${GW}/api/dashboard/equipos`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify(payload),
   });
   return handleResponse<Equipo>(res);
@@ -247,4 +293,15 @@ export async function crearArea(payload: CreateAreaPayload): Promise<Area> {
     body: JSON.stringify(payload),
   });
   return handleResponse<Area>(res);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BFF — Gateway :3000
+══════════════════════════════════════════════════════════════ */
+
+export async function getResumenConsolidado(token: string): Promise<any[]> {
+  const res = await fetch(`${GW}/api/dashboard/resumen`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<any[]>(res);
 }
