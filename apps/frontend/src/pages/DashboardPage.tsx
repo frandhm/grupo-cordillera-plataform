@@ -17,10 +17,10 @@ import { MetricSection } from '../components/sections/MetricSection';
 import { LogsSection } from '../components/sections/LogsSection';
 
 type Tab =
-  | 'gateway-kpis' | 'raw-kpis'    | 'create-kpi'
-  | 'gateway-eq'   | 'crear-equipo' | 'raw-eq'
-  | 'metas'        | 'crear-meta'   | 'editar-meta'
-  | 'metricas'     | 'logs';
+  | 'gateway-kpis' | 'raw-kpis' | 'create-kpi'
+  | 'gateway-eq' | 'crear-equipo' | 'raw-eq'
+  | 'metas' | 'crear-meta' | 'editar-meta'
+  | 'metricas' | 'logs';
 
 interface Props { token: string; onLogout: () => void; }
 
@@ -32,9 +32,9 @@ export function DashboardPage({ token, onLogout }: Props) {
   /* Data hooks */
   const gwKpis = useAsyncData(() => getGatewayKpis(token), [token]);
   const rawKpis = useAsyncData(getMsKpis, []);
-  const gwEq   = useAsyncData(() => getGatewayEquipos(token), [token]);
-  const rawEq  = useAsyncData(getMsEquipos, []);
-  const metas  = useAsyncData(getMsMetas, []);
+  const gwEq = useAsyncData(() => getGatewayEquipos(token), [token]);
+  const rawEq = useAsyncData(getMsEquipos, []);
+  const metas = useAsyncData(getMsMetas, []);
 
   /* Forms State */
   const emptyKpi: CreateKpiPayload = { nombre: '', valor: 0, areaId: '', descripcion: '', unidadMedicion: '' };
@@ -95,13 +95,13 @@ export function DashboardPage({ token, onLogout }: Props) {
   };
 
   const handleEditarMeta = (meta: Meta) => {
-    setMetaForm({ 
-      nombre: meta.nombre, 
-      areaId: meta.areaId, 
-      indicadorId: meta.indicadorId || '', 
-      valorObjetivo: meta.valorObjetivo, 
-      valorActual: meta.valorActual, 
-      fechaLimite: meta.fechaLimite 
+    setMetaForm({
+      nombre: meta.nombre,
+      areaId: meta.areaId,
+      indicadorId: meta.indicadorId || '',
+      valorObjetivo: meta.valorObjetivo,
+      valorActual: meta.valorActual,
+      fechaLimite: meta.fechaLimite
     });
     setEditMetaId(meta.id);
     setTab('crear-meta');
@@ -166,16 +166,16 @@ export function DashboardPage({ token, onLogout }: Props) {
             <div key={group.label}>
               <div className="nav-section-label">{group.label}</div>
               {group.items.map(n => (
-                <button key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`} 
+                <button key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`}
                   onClick={() => {
                     setTab(n.id);
                     if (n.id === 'crear-meta' && !editMetaId) {
                       setMetaForm(emptyMeta);
                     }
                     if (n.id === 'crear-meta' && editMetaId) {
-                       // Si pulsa "Crear" estando en edición, reseteamos para crear una nueva
-                       setEditMetaId(null);
-                       setMetaForm(emptyMeta);
+                      // Si pulsa "Crear" estando en edición, reseteamos para crear una nueva
+                      setEditMetaId(null);
+                      setMetaForm(emptyMeta);
                     }
                   }}>
                   <span className="nav-icon">{n.icon}</span>
@@ -196,18 +196,18 @@ export function DashboardPage({ token, onLogout }: Props) {
 
       <main className="dash-main">
         {tab === 'gateway-kpis' && <KpiListView gwKpis={gwKpis} onRefresh={gwKpis.load} />}
-        {tab === 'raw-kpis'     && <KpiRawView rawKpis={rawKpis} onRefresh={rawKpis.load} />}
-        {tab === 'create-kpi'   && <KpiCreateForm form={kpiForm} setForm={setKpiForm} onSubmit={handleCreateKpi} creating={kpiState.creating} ok={kpiState.ok} err={kpiState.err} />}
-        
-        {tab === 'gateway-eq'   && <EquipoListView gwEq={gwEq} onRefresh={gwEq.load} />}
+        {tab === 'raw-kpis' && <KpiRawView rawKpis={rawKpis} onRefresh={rawKpis.load} />}
+        {tab === 'create-kpi' && <KpiCreateForm form={kpiForm} setForm={setKpiForm} onSubmit={handleCreateKpi} creating={kpiState.creating} ok={kpiState.ok} err={kpiState.err} />}
+
+        {tab === 'gateway-eq' && <EquipoListView gwEq={gwEq} onRefresh={gwEq.load} />}
         {tab === 'crear-equipo' && <EquipoCreateForm form={eqForm} setForm={setEqForm} onSubmit={handleCreateEquipo} creating={eqState.creating} ok={eqState.ok} err={eqState.err} />}
-        {tab === 'raw-eq'       && <EquipoRawView rawEq={rawEq} onRefresh={rawEq.load} />}
+        {tab === 'raw-eq' && <EquipoRawView rawEq={rawEq} onRefresh={rawEq.load} />}
 
-        {tab === 'metas'        && <MetaListView metas={metas} onRefresh={metas.load} onEditar={handleEditarMeta} onEliminar={handleEliminarMeta} onCrear={() => setTab('crear-meta')} />}
-        {tab === 'crear-meta'   && <MetaCreateForm kpis={rawKpis.data} form={metaForm} setForm={setMetaForm} onSubmit={handleCreateMeta} creating={metaState.creating} ok={metaState.ok} err={metaState.err} editMetaId={editMetaId} onCancel={() => { setEditMetaId(null); setMetaForm(emptyMeta); setTab('metas'); }} />}
+        {tab === 'metas' && <MetaListView metas={metas} onRefresh={metas.load} onEditar={handleEditarMeta} onEliminar={handleEliminarMeta} onCrear={() => setTab('crear-meta')} />}
+        {tab === 'crear-meta' && <MetaCreateForm kpis={rawKpis.data} form={metaForm} setForm={setMetaForm} onSubmit={handleCreateMeta} creating={metaState.creating} ok={metaState.ok} err={metaState.err} editMetaId={editMetaId} onCancel={() => { setEditMetaId(null); setMetaForm(emptyMeta); setTab('metas'); }} />}
 
-        {tab === 'metricas'     && <MetricSection token={token} />}
-        {tab === 'logs'         && <LogsSection token={token} />}
+        {tab === 'metricas' && <MetricSection token={token} />}
+        {tab === 'logs' && <LogsSection token={token} />}
       </main>
     </div>
   );
