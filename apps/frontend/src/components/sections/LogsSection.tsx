@@ -26,7 +26,7 @@ export function LogsSection({ token }: { token: string }) {
     <section className="content-section animated-fade-in">
       <SectionHeader title="Logs de Auditoría" desc="Registro de eventos críticos del sistema (Solo Jefe)"
         badge="Solo Admin" badgeType="auth" onRefresh={loadLogs} loading={loading} />
-      
+
       <div className="table-wrapper">
         <table className="kpi-table">
           <thead>
@@ -41,14 +41,14 @@ export function LogsSection({ token }: { token: string }) {
             {logs.map(log => (
               <tr key={log.id}>
                 <td>
-                  <span className={`team-tag ${log.event.includes('FAILURE') ? 'status-nocumplida' : ''}`} 
-                    style={{borderColor: log.event.includes('FAILURE') ? 'var(--red)' : 'var(--accent)', color: log.event.includes('FAILURE') ? 'var(--red)' : 'var(--accent)'}}>
+                  <span className={`team-tag ${log.event.includes('FAILURE') ? 'status-nocumplida' : ''}`}
+                    style={{ borderColor: log.event.includes('FAILURE') ? 'var(--red)' : 'var(--accent)', color: log.event.includes('FAILURE') ? 'var(--red)' : 'var(--accent)' }}>
                     {log.event}
                   </span>
                 </td>
                 <td>{log.user}</td>
-                <td style={{fontSize: '0.7rem'}}>{log.detail}</td>
-                <td className="mono" style={{fontSize: '0.65rem', color: 'var(--text-faint)'}}>
+                <td style={{ fontSize: '0.7rem' }}>{log.detail}</td>
+                <td className="mono" style={{ fontSize: '0.65rem', color: 'var(--text-faint)' }}>
                   {new Date(log.timestamp).toLocaleString()}
                 </td>
               </tr>

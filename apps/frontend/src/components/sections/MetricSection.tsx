@@ -18,7 +18,7 @@ export function MetricSection({ token }: { token: string }) {
     try {
       const data = await getMsKpis();
       setKpis(data);
-      
+
       // Cargar resumen también
       setResLoading(true);
       if (token) {
@@ -58,13 +58,13 @@ export function MetricSection({ token }: { token: string }) {
       const history = await getHistorialKpi(selectedKpi.id);
       setHistorial(history);
       loadKpis(); // Recargar lista general
-      
+
       // Sincronizar el dashboard (Resumen)
       if (token) {
         const resData = await getResumenConsolidado(token);
         setResumen(resData);
       }
-      
+
       alert('Valor registrado correctamente');
     } catch (e) {
       alert('Error al registrar valor');
@@ -170,20 +170,20 @@ export function MetricSection({ token }: { token: string }) {
         badge="Interactivo" badgeType="open" onRefresh={loadKpis} loading={loading} />
 
       {/* BLOQUE DASHBOARD (Movido desde Resumen BFF) */}
-      <div style={{marginBottom: '3rem'}}>
-        <div className="table-wrapper" style={{height: '300px', padding: '1.5rem', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.2)'}}>
-          <h3 className="nav-section-label" style={{marginTop: 0, marginBottom: '1rem', color: 'var(--accent)'}}>CUMPLIMIENTO DE OBJETIVOS (DASHBOARD)</h3>
+      <div style={{ marginBottom: '3rem' }}>
+        <div className="table-wrapper" style={{ height: '300px', padding: '1.5rem', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.2)' }}>
+          <h3 className="nav-section-label" style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--accent)' }}>CUMPLIMIENTO DE OBJETIVOS (DASHBOARD)</h3>
           {(ResponsiveContainer as any) && (
             <ResponsiveContainer width="100%" height="90%">
-              <BarChart data={resumen.filter((i:any) => i.meta) || []}>
+              <BarChart data={resumen.filter((i: any) => i.meta) || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="nombre" stroke="var(--text-muted)" fontSize={10} tick={{fill: 'var(--text-muted)'}} />
+                <XAxis dataKey="nombre" stroke="var(--text-muted)" fontSize={10} tick={{ fill: 'var(--text-muted)' }} />
                 <YAxis stroke="var(--text-muted)" fontSize={10} />
-                <Tooltip 
-                  cursor={{fill: 'rgba(255,255,255,0.05)'}}
-                  contentStyle={{background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.8rem'}}
+                <Tooltip
+                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                  contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.8rem' }}
                 />
-                <Legend wrapperStyle={{fontSize: '0.7rem', paddingTop: '10px'}} />
+                <Legend wrapperStyle={{ fontSize: '0.7rem', paddingTop: '10px' }} />
                 <Bar name="Real" dataKey="valor" fill="var(--accent)" radius={[4, 4, 0, 0]} />
                 <Bar name="Meta" dataKey="meta.valorObjetivo" fill="var(--text-faint)" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -196,12 +196,12 @@ export function MetricSection({ token }: { token: string }) {
             <thead><tr><th>KPI</th><th>EQUIPO</th><th>VALOR</th><th>META</th><th>CUMPLIMIENTO</th></tr></thead>
             <tbody>
               {resumen.map((item: any) => (
-                <tr key={item.id} style={{cursor: 'pointer'}} onClick={() => handleSelectKpi(item)}>
+                <tr key={item.id} style={{ cursor: 'pointer' }} onClick={() => handleSelectKpi(item)}>
                   <td><strong>{item.nombre}</strong></td>
                   <td><span className="team-tag">{item.equipoId || '—'}</span></td>
                   <td className="mono">{item.valor.toLocaleString('es-CL')}</td>
                   <td>{item.meta ? item.meta.valorObjetivo : '—'}</td>
-                  <td className="mono" style={{fontWeight:'bold', color: 'var(--accent)'}}>{item.cumplimientoCalculado}</td>
+                  <td className="mono" style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{item.cumplimientoCalculado}</td>
                 </tr>
               ))}
             </tbody>

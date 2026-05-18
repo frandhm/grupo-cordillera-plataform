@@ -39,11 +39,11 @@ export function KpiRawView({ rawKpis, onRefresh }: { rawKpis: any, onRefresh: ()
           <tbody>
             {rawKpis.data?.map((k: KpiRaw) => (
               <tr key={k.id}>
-                <td className="mono" style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                <td className="mono" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span title={k.id}>{k.id.slice(0, 8)}</span>
-                  <button 
+                  <button
                     onClick={() => { navigator.clipboard.writeText(k.id); alert('ID Copiado'); }}
-                    style={{padding: '2px 4px', fontSize: '0.6rem', background: 'var(--accent)', border: 'none', borderRadius: '3px', cursor: 'pointer', color: 'black'}}
+                    style={{ padding: '2px 4px', fontSize: '0.6rem', background: 'var(--accent)', border: 'none', borderRadius: '3px', cursor: 'pointer', color: 'black' }}
                   >
                     COPY
                   </button>
@@ -53,7 +53,7 @@ export function KpiRawView({ rawKpis, onRefresh }: { rawKpis: any, onRefresh: ()
                 <td><span className="area-tag">{k.areaId}</span></td>
                 <td className="mono">{new Date(k.fechaCreacion).toLocaleString('es-CL')}</td>
                 <td>
-                  <button onClick={() => handleDelete(k.id)} style={{background: 'var(--red)', color: 'white', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer'}}>
+                  <button onClick={() => handleDelete(k.id)} style={{ background: 'var(--red)', color: 'white', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}>
                     ELIMINAR
                   </button>
                 </td>
@@ -102,13 +102,13 @@ export function KpiCreateForm({ form, setForm, onSubmit, creating, ok, err }: {
             <textarea value={form.descripcion} placeholder="Opcional"
               onChange={e => setForm((f: any) => ({ ...f, descripcion: e.target.value }))} />
           </div>
-          <div className="field-row" style={{display: 'flex', gap: '1rem'}}>
-            <div className="field-group" style={{flex: 1}}>
+          <div className="field-row" style={{ display: 'flex', gap: '1rem' }}>
+            <div className="field-group" style={{ flex: 1 }}>
               <label>EQUIPO RESPONSABLE (ID)</label>
               <input type="text" value={form.equipoId || ''} placeholder="Ej: equipo-ventas-sur"
                 onChange={e => setForm((f: any) => ({ ...f, equipoId: e.target.value }))} />
             </div>
-            <div className="field-group" style={{flex: 1}}>
+            <div className="field-group" style={{ flex: 1 }}>
               <label>RESPONSABLE (NOMBRE)</label>
               <input type="text" value={form.responsable || ''} placeholder="Ej: Juan Pérez"
                 onChange={e => setForm((f: any) => ({ ...f, responsable: e.target.value }))} />
@@ -120,7 +120,7 @@ export function KpiCreateForm({ form, setForm, onSubmit, creating, ok, err }: {
               onChange={e => setForm((f: any) => ({ ...f, unidadMedicion: e.target.value }))} />
           </div>
           {err && <div className="alert-error">{err}</div>}
-          {ok  && <div className="alert-success">{ok}</div>}
+          {ok && <div className="alert-success">{ok}</div>}
           <button type="submit" className="btn-create" disabled={creating}>
             {creating ? 'GUARDANDO...' : '+ CREAR KPI'}
           </button>

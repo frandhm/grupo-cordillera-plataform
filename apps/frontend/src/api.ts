@@ -8,8 +8,8 @@
  *   /ms    → :3001  ms-kpis
  */
 
-const GW    = '/gw';
-const MS    = '/ms';
+const GW = '/gw';
+const MS = '/ms';
 const MS_EQ = '/ms-eq';
 const MS_MT = '/ms-mt';
 
@@ -174,7 +174,7 @@ export async function getMsKpis(): Promise<KpiRaw[]> {
 export async function createKpi(payload: CreateKpiPayload, token: string): Promise<KpiRaw> {
   const res = await fetch(`${GW}/api/dashboard/kpis`, {
     method: 'POST',
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
@@ -235,7 +235,7 @@ export async function getMsEquipos(): Promise<Equipo[]> {
 export async function crearEquipoDirecto(payload: CreateEquipoPayload, token: string): Promise<Equipo> {
   const res = await fetch(`${GW}/api/dashboard/equipos`, {
     method: 'POST',
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },

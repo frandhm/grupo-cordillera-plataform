@@ -38,8 +38,8 @@ export function KpiCard({ kpi }: { kpi: KpiGateway }) {
       </div>
       <div className="kpi-nombre">{kpi.nombre}</div>
       <div className="kpi-valor">
-        {kpi.valor.toLocaleString('es-CL')} 
-        <span style={{fontSize: '0.9rem', color: 'var(--text-dim)', marginLeft: '4px'}}>{kpi.unidadMedicion}</span>
+        {kpi.valor.toLocaleString('es-CL')}
+        <span style={{ fontSize: '0.9rem', color: 'var(--text-dim)', marginLeft: '4px' }}>{kpi.unidadMedicion}</span>
       </div>
       <div className="kpi-bar-container">
         <div className="kpi-bar-fill" style={{ width: `${pct}%` }} />
@@ -72,7 +72,7 @@ export function EquipoCard({ equipo }: { equipo: Equipo }) {
 
 /* ── MetaCard ────────────────────────────────────────────────── */
 const ESTADO_CLASS: Record<EstadoMeta, string> = {
-  CUMPLIDA:    'status-ok',
+  CUMPLIDA: 'status-ok',
   EN_PROGRESO: 'status-progress',
   NO_CUMPLIDA: 'status-nocumplida',
 };

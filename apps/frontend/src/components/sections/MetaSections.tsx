@@ -11,10 +11,10 @@ export function MetaListView({ metas, onRefresh, onEditar, onEliminar, onCrear }
 }) {
   return (
     <section className="content-section">
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <SectionHeader title="Metas" desc="GET /api/metas · ms-metas (:3002)"
           badge="Sin Autenticación" badgeType="open" onRefresh={onRefresh} loading={metas.loading} />
-        <button className="btn-create" style={{marginTop: 0, padding: '0.5rem 1rem'}} onClick={onCrear}>+ NUEVA META</button>
+        <button className="btn-create" style={{ marginTop: 0, padding: '0.5rem 1rem' }} onClick={onCrear}>+ NUEVA META</button>
       </div>
       <div className="kpi-grid">
         {metas.data?.map((m: Meta) => (
@@ -50,9 +50,9 @@ export function MetaCreateForm({ kpis, form, setForm, onSubmit, creating, ok, er
       const kpi = await getKpiPorId(form.indicadorId);
       const factor = 1 + (percentValue / 100);
       const nuevoObjetivo = Math.round(kpi.valor * factor);
-      setForm((f: any) => ({ 
-        ...f, 
-        valorActual: kpi.valor, 
+      setForm((f: any) => ({
+        ...f,
+        valorActual: kpi.valor,
         valorObjetivo: nuevoObjetivo,
         nombre: f.nombre || `${percentValue}% más en ${kpi.nombre}`
       }));
@@ -65,11 +65,11 @@ export function MetaCreateForm({ kpis, form, setForm, onSubmit, creating, ok, er
 
   return (
     <section className="content-section animated-fade-in">
-      <SectionHeader 
-        title={editMetaId ? 'Editar Meta' : 'Crear Nueva Meta'} 
+      <SectionHeader
+        title={editMetaId ? 'Editar Meta' : 'Crear Nueva Meta'}
         desc={`${editMetaId ? 'PUT' : 'POST'} /api/metas · ms-metas (:3002)`}
         badge="Sin Autenticación" badgeType="open" />
-      
+
       <form className="create-form" onSubmit={onSubmit}>
         <div className="field-group">
           <label>NOMBRE DE LA META</label>
@@ -83,47 +83,47 @@ export function MetaCreateForm({ kpis, form, setForm, onSubmit, creating, ok, er
         </div>
         <div className="field-group">
           <label>KPI A TRACKEAR (VINCULACIÓN)</label>
-          <select 
-            value={form.indicadorId || ''} 
+          <select
+            value={form.indicadorId || ''}
             onChange={e => setForm((f: any) => ({ ...f, indicadorId: e.target.value }))}
-            style={{width: '100%', padding: '0.75rem', background: 'var(--surface-light)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', outline: 'none', appearance: 'auto'}}
+            style={{ width: '100%', padding: '0.75rem', background: 'var(--surface-light)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', outline: 'none', appearance: 'auto' }}
           >
             <option value="">-- Sin Vincular (Meta Manual) --</option>
             {kpis?.map(k => (
               <option key={k.id} value={k.id}>{k.nombre} (Área: {k.areaId}) - Actual: {k.valor}</option>
             ))}
           </select>
-          <p className="nav-sub" style={{marginTop: '4px'}}>Selecciona un KPI para que el progreso de la meta se actualice automáticamente al ingresar nuevos valores.</p>
+          <p className="nav-sub" style={{ marginTop: '4px' }}>Selecciona un KPI para que el progreso de la meta se actualice automáticamente al ingresar nuevos valores.</p>
         </div>
-        <div className="field-row" style={{display: 'flex', gap: '1rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)'}}>
-          <div style={{flex: 1}}>
-            <label style={{fontSize: '0.6rem', color: 'var(--accent)', fontWeight: 'bold'}}>TIPO DE META</label>
-            <div style={{display: 'flex', gap: '0.5rem', marginTop: '0.5rem'}}>
-              <button type="button" className={`nav-item ${!percentMode ? 'active' : ''}`} style={{padding: '5px 10px', fontSize: '0.7rem'}} onClick={() => setPercentMode(false)}>VALOR FIJO</button>
-              <button type="button" className={`nav-item ${percentMode ? 'active' : ''}`} style={{padding: '5px 10px', fontSize: '0.7rem'}} onClick={() => setPercentMode(true)}>INCREMENTO %</button>
+        <div className="field-row" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: '0.6rem', color: 'var(--accent)', fontWeight: 'bold' }}>TIPO DE META</label>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button type="button" className={`nav-item ${!percentMode ? 'active' : ''}`} style={{ padding: '5px 10px', fontSize: '0.7rem' }} onClick={() => setPercentMode(false)}>VALOR FIJO</button>
+              <button type="button" className={`nav-item ${percentMode ? 'active' : ''}`} style={{ padding: '5px 10px', fontSize: '0.7rem' }} onClick={() => setPercentMode(true)}>INCREMENTO %</button>
             </div>
           </div>
           {percentMode && (
-            <div style={{flex: 1, display: 'flex', gap: '0.5rem', alignItems: 'flex-end'}}>
-              <div className="field-group" style={{marginBottom: 0}}>
+            <div style={{ flex: 1, display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+              <div className="field-group" style={{ marginBottom: 0 }}>
                 <label>% AUMENTO</label>
-                <input type="number" value={percentValue} onChange={e => setPercentValue(parseFloat(e.target.value) || 0)} style={{width: '80px'}} />
+                <input type="number" value={percentValue} onChange={e => setPercentValue(parseFloat(e.target.value) || 0)} style={{ width: '80px' }} />
               </div>
-              <button type="button" className="btn-refresh" onClick={handleCalcPercent} disabled={calcLoading} style={{height: '38px'}}>
+              <button type="button" className="btn-refresh" onClick={handleCalcPercent} disabled={calcLoading} style={{ height: '38px' }}>
                 {calcLoading ? '...' : 'CALCULAR'}
               </button>
             </div>
           )}
         </div>
 
-        <div className="field-row" style={{display: 'flex', gap: '1rem'}}>
-          <div className="field-group" style={{flex: 1}}>
+        <div className="field-row" style={{ display: 'flex', gap: '1rem' }}>
+          <div className="field-group" style={{ flex: 1 }}>
             <label>VALOR OBJETIVO (META)</label>
             <input type="number" value={form.valorObjetivo === 0 ? '' : form.valorObjetivo} required
               onChange={e => setForm((f: any) => ({ ...f, valorObjetivo: parseFloat(e.target.value) || 0 }))} />
             {percentMode && <p className="nav-sub">Calculado automáticamente</p>}
           </div>
-          <div className="field-group" style={{flex: 1}}>
+          <div className="field-group" style={{ flex: 1 }}>
             <label>VALOR ACTUAL (INICIO)</label>
             <input type="number" value={form.valorActual} required
               onChange={e => setForm((f: any) => ({ ...f, valorActual: parseFloat(e.target.value) || 0 }))} />
@@ -135,13 +135,13 @@ export function MetaCreateForm({ kpis, form, setForm, onSubmit, creating, ok, er
             onChange={e => setForm((f: any) => ({ ...f, fechaLimite: e.target.value }))} />
         </div>
         {err && <div className="alert-error">{err}</div>}
-        {ok  && <div className="alert-success">{ok}</div>}
-        <div style={{display: 'flex', gap: '0.75rem', marginTop: '1rem'}}>
-          <button type="submit" className="btn-create" style={{flex: 2}} disabled={creating}>
+        {ok && <div className="alert-success">{ok}</div>}
+        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+          <button type="submit" className="btn-create" style={{ flex: 2 }} disabled={creating}>
             {creating ? 'GUARDANDO...' : (editMetaId ? 'GUARDAR CAMBIOS' : 'CREAR META')}
           </button>
           {editMetaId && (
-            <button type="button" className="btn-cancel" style={{flex: 1}} onClick={onCancel}>
+            <button type="button" className="btn-cancel" style={{ flex: 1 }} onClick={onCancel}>
               CANCELAR
             </button>
           )}

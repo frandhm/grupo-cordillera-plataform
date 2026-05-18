@@ -44,7 +44,7 @@ export function EquipoCreateForm({ form, setForm, onSubmit, creating, ok, err }:
           <input type="number" value={form.cantidadIntegrantes} onChange={e => setForm((f: any) => ({ ...f, cantidadIntegrantes: parseInt(e.target.value) || 0 }))} />
         </div>
         {err && <div className="alert-error">{err}</div>}
-        {ok  && <div className="alert-success">{ok}</div>}
+        {ok && <div className="alert-success">{ok}</div>}
         <button type="submit" className="btn-create" disabled={creating}>GUARDAR EQUIPO</button>
       </form>
     </section>
