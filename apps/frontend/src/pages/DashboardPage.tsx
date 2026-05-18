@@ -22,14 +22,17 @@ type Tab =
   | 'metas' | 'crear-meta' | 'editar-meta'
   | 'metricas' | 'logs';
 
-interface Props { token: string; onLogout: () => void; }
+interface Props {
+  token: string;
+  onLogout: () => void;
+}
 
 export function DashboardPage({ token, onLogout }: Props) {
   const user = decodeToken(token);
   const initialTab: Tab = user.role === 'vendedor' ? 'metricas' : 'gateway-kpis';
   const [tab, setTab] = useState<Tab>(initialTab);
 
-  /* Data hooks */
+  /* KPIs */
   const gwKpis = useAsyncData(() => getGatewayKpis(token), [token]);
   const rawKpis = useAsyncData(getMsKpis, []);
   const gwEq = useAsyncData(() => getGatewayEquipos(token), [token]);
@@ -61,7 +64,7 @@ export function DashboardPage({ token, onLogout }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
-  /* ── Handlers ── */
+  /* Handlers */
   const handleCreateKpi = async (e: React.FormEvent) => {
     e.preventDefault();
     setKpiState({ creating: true, ok: '', err: '' });
