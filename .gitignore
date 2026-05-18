@@ -1,52 +1,64 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# ==========================================
+# GRUPO CORDILLERA - PLATAFORMA (NX MONOREPO)
+# ==========================================
 
-# compiled output
-dist
-tmp
-out-tsc
-
-# dependencies
-node_modules
-
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-
-# System Files
-.DS_Store
-Thumbs.db
-
-.nx/cache
-.nx/workspace-data
-.claude/worktrees
-.claude/settings.local.json
-
+# --- DEPENDENCIAS Y SALIDAS DE CONSTRUCCIÓN ---
 node_modules/
-dist/
+/dist/
+/build/
+/tmp/
+/out-tsc/
+/coverage/
+
+# --- NX & HERRAMIENTAS DE DESARROLLO ---
 .nx/cache/
-tmp/
+.nx/workspace-data/
+.angular/cache/
+.claude/
+/.sass-cache/
+
+# --- CONFIGURACIÓN LOCAL Y SECRETOS (CRÍTICO) ---
+# No subir credenciales de DB ni configuraciones personales
 .env
 .env.*
 !.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# --- IDEs (VS Code / JetBrains / Otros) ---
+# Esto evita que tus temas o extensiones personales afecten a tus compañeros
+.vscode/
+.idea/
+*.swp
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# --- DOCKER ---
+# Ignorar la carpeta donde Postgres guarda los datos físicos (si la usas)
+pgdata/
+docker/data/
+
+# --- LOGS Y DEPURACIÓN ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- SISTEMA OPERATIVO ---
+.DS_Store
+Thumbs.db
+/libpeerconnection.log
+
+# --- OTROS ---
+/connect.lock
+testem.log
+/typings/

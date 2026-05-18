@@ -1,0 +1,7 @@
+ms-metas:
+  build: .
+  command: npx nx serve api-gateway
+  ports:
+    - "3002:3002"
+  depends_on:
+    - db-metas
