@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SectionHeader, MetaCard } from '../DashboardComponents';
-import { Meta, CreateMetaPayload, getKpiPorId } from '../../api';
+import { Meta, CreateMetaPayload, getKpiPorId, KpiRaw } from '../../api';
 
 export function MetaListView({ metas, onRefresh, onEditar, onEliminar, onCrear }: {
   metas: any;
@@ -25,7 +25,8 @@ export function MetaListView({ metas, onRefresh, onEditar, onEliminar, onCrear }
   );
 }
 
-export function MetaCreateForm({ form, setForm, onSubmit, creating, ok, err, editMetaId, onCancel }: {
+export function MetaCreateForm({ kpis, form, setForm, onSubmit, creating, ok, err, editMetaId, onCancel }: {
+  kpis: KpiRaw[] | null;
   form: CreateMetaPayload;
   setForm: (f: any) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -81,10 +82,18 @@ export function MetaCreateForm({ form, setForm, onSubmit, creating, ok, err, edi
             onChange={e => setForm((f: any) => ({ ...f, areaId: e.target.value }))} />
         </div>
         <div className="field-group">
-          <label>INDICADOR ID (KPI A TRACKEAR)</label>
-          <input type="text" value={form.indicadorId} placeholder="ID del KPI en MS-KPIs (Opcional)"
-            onChange={e => setForm((f: any) => ({ ...f, indicadorId: e.target.value }))} />
-          <p className="nav-sub" style={{marginTop: '4px'}}>Si incluyes un ID de KPI, el valor actual se sincronizará automáticamente.</p>
+          <label>KPI A TRACKEAR (VINCULACIÓN)</label>
+          <select 
+            value={form.indicadorId || ''} 
+            onChange={e => setForm((f: any) => ({ ...f, indicadorId: e.target.value }))}
+            style={{width: '100%', padding: '0.75rem', background: 'var(--surface-light)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', outline: 'none', appearance: 'auto'}}
+          >
+            <option value="">-- Sin Vincular (Meta Manual) --</option>
+            {kpis?.map(k => (
+              <option key={k.id} value={k.id}>{k.nombre} (Área: {k.areaId}) - Actual: {k.valor}</option>
+            ))}
+          </select>
+          <p className="nav-sub" style={{marginTop: '4px'}}>Selecciona un KPI para que el progreso de la meta se actualice automáticamente al ingresar nuevos valores.</p>
         </div>
         <div className="field-row" style={{display: 'flex', gap: '1rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)'}}>
           <div style={{flex: 1}}>

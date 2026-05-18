@@ -204,7 +204,7 @@ export function DashboardPage({ token, onLogout }: Props) {
         {tab === 'raw-eq'       && <EquipoRawView rawEq={rawEq} onRefresh={rawEq.load} />}
 
         {tab === 'metas'        && <MetaListView metas={metas} onRefresh={metas.load} onEditar={handleEditarMeta} onEliminar={handleEliminarMeta} onCrear={() => setTab('crear-meta')} />}
-        {tab === 'crear-meta'   && <MetaCreateForm form={metaForm} setForm={setMetaForm} onSubmit={handleCreateMeta} creating={metaState.creating} ok={metaState.ok} err={metaState.err} editMetaId={editMetaId} onCancel={() => { setEditMetaId(null); setMetaForm(emptyMeta); setTab('metas'); }} />}
+        {tab === 'crear-meta'   && <MetaCreateForm kpis={rawKpis.data} form={metaForm} setForm={setMetaForm} onSubmit={handleCreateMeta} creating={metaState.creating} ok={metaState.ok} err={metaState.err} editMetaId={editMetaId} onCancel={() => { setEditMetaId(null); setMetaForm(emptyMeta); setTab('metas'); }} />}
 
         {tab === 'metricas'     && <MetricSection token={token} />}
         {tab === 'logs'         && <LogsSection token={token} />}

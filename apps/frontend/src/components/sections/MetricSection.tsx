@@ -58,6 +58,13 @@ export function MetricSection({ token }: { token: string }) {
       const history = await getHistorialKpi(selectedKpi.id);
       setHistorial(history);
       loadKpis(); // Recargar lista general
+      
+      // Sincronizar el dashboard (Resumen)
+      if (token) {
+        const resData = await getResumenConsolidado(token);
+        setResumen(resData);
+      }
+      
       alert('Valor registrado correctamente');
     } catch (e) {
       alert('Error al registrar valor');
