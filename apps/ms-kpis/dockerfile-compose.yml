@@ -1,0 +1,9 @@
+# Tu Microservicio de KPIs
+ms-kpis:
+  build: .
+  command: npx nx serve ms-kpis
+  ports:
+    - "3001:3001"
+
+  depends_on:
+    - db-kpis

@@ -1,411 +1,216 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  getGatewayKpis,
-  getMsKpis,
-  createKpi,
-  KpiGateway,
-  KpiRaw,
+  getGatewayKpis, getMsKpis, createKpi,
+  getGatewayEquipos, getMsEquipos, crearEquipoDirecto,
+  getMsMetas, crearMeta, actualizarMeta, eliminarMeta,
+  getResumenConsolidado,
   CreateKpiPayload,
+  CreateEquipoPayload,
+  Meta, CreateMetaPayload,
 } from '../api';
 
-type Tab = 'gateway' | 'raw' | 'create';
+import { useAsyncData, decodeToken } from '../hooks/useDashboard';
+import { KpiListView, KpiRawView, KpiCreateForm } from '../components/sections/KpiSections';
+import { EquipoListView, EquipoCreateForm, EquipoRawView } from '../components/sections/EquipoSections';
+import { MetaListView, MetaCreateForm } from '../components/sections/MetaSections';
+import { MetricSection } from '../components/sections/MetricSection';
+import { LogsSection } from '../components/sections/LogsSection';
+
+type Tab =
+  | 'gateway-kpis' | 'raw-kpis' | 'create-kpi'
+  | 'gateway-eq' | 'crear-equipo' | 'raw-eq'
+  | 'metas' | 'crear-meta' | 'editar-meta'
+  | 'metricas' | 'logs';
 
 interface Props {
   token: string;
   onLogout: () => void;
 }
 
-/* ── Decode JWT payload (no verification — solo para mostrar info) ── */
-function decodeToken(token: string): { email: string; role: string } {
-  try {
-    return JSON.parse(atob(token.split('.')[1]));
-  } catch {
-    return { email: 'usuario', role: 'admin' };
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════ */
-
 export function DashboardPage({ token, onLogout }: Props) {
-  const [tab, setTab] = useState<Tab>('gateway');
   const user = decodeToken(token);
+  const initialTab: Tab = user.role === 'vendedor' ? 'metricas' : 'gateway-kpis';
+  const [tab, setTab] = useState<Tab>(initialTab);
 
-  /* ── Gateway KPIs state ── */
-  const [gwKpis, setGwKpis]       = useState<KpiGateway[]>([]);
-  const [gwLoading, setGwLoading] = useState(false);
-  const [gwError, setGwError]     = useState('');
+  /* KPIs */
+  const gwKpis = useAsyncData(() => getGatewayKpis(token), [token]);
+  const rawKpis = useAsyncData(getMsKpis, []);
+  const gwEq = useAsyncData(() => getGatewayEquipos(token), [token]);
+  const rawEq = useAsyncData(getMsEquipos, []);
+  const metas = useAsyncData(getMsMetas, []);
 
-  /* ── Raw KPIs state ── */
-  const [rawKpis, setRawKpis]       = useState<KpiRaw[]>([]);
-  const [rawLoading, setRawLoading] = useState(false);
-  const [rawError, setRawError]     = useState('');
+  /* Forms State */
+  const emptyKpi: CreateKpiPayload = { nombre: '', valor: 0, areaId: '', descripcion: '', unidadMedicion: '' };
+  const [kpiForm, setKpiForm] = useState(emptyKpi);
+  const [kpiState, setKpiState] = useState({ creating: false, ok: '', err: '' });
 
-  /* ── Create KPI state ── */
-  const emptyForm: CreateKpiPayload = { nombre: '', valor: 0, areaId: '' };
-  const [form, setForm]           = useState<CreateKpiPayload>(emptyForm);
-  const [creating, setCreating]   = useState(false);
-  const [createOk, setCreateOk]   = useState('');
-  const [createErr, setCreateErr] = useState('');
+  const emptyEq: CreateEquipoPayload = { nombre: '', lider: '', areaId: '', cantidadIntegrantes: 0 };
+  const [eqForm, setEqForm] = useState(emptyEq);
+  const [eqState, setEqState] = useState({ creating: false, ok: '', err: '' });
 
-  /* ── Loaders ── */
-  const loadGw = useCallback(async () => {
-    setGwLoading(true);
-    setGwError('');
-    try {
-      setGwKpis(await getGatewayKpis(token));
-    } catch (e: unknown) {
-      setGwError(e instanceof Error ? e.message : 'Error');
-    } finally {
-      setGwLoading(false);
-    }
-  }, [token]);
+  const emptyMeta: CreateMetaPayload = { nombre: '', areaId: '', indicadorId: '', valorObjetivo: 0, valorActual: 0, fechaLimite: '' };
+  const [metaForm, setMetaForm] = useState(emptyMeta);
+  const [editMetaId, setEditMetaId] = useState<string | null>(null);
+  const [metaState, setMetaState] = useState({ creating: false, ok: '', err: '' });
 
-  const loadRaw = useCallback(async () => {
-    setRawLoading(true);
-    setRawError('');
-    try {
-      setRawKpis(await getMsKpis());
-    } catch (e: unknown) {
-      setRawError(e instanceof Error ? e.message : 'Error');
-    } finally {
-      setRawLoading(false);
-    }
-  }, []);
-
+  /* Auto-load */
   useEffect(() => {
-    if (tab === 'gateway') loadGw();
-    if (tab === 'raw')     loadRaw();
-  }, [tab, loadGw, loadRaw]);
+    const loaders: Record<string, () => void> = {
+      'gateway-kpis': gwKpis.load, 'raw-kpis': rawKpis.load,
+      'gateway-eq': gwEq.load, 'raw-eq': rawEq.load,
+      'metas': metas.load
+    };
+    if (loaders[tab]) loaders[tab]();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
-  /* ── Create handler ── */
-  const handleCreate = async (e: React.FormEvent) => {
+  /* Handlers */
+  const handleCreateKpi = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCreating(true);
-    setCreateOk('');
-    setCreateErr('');
+    setKpiState({ creating: true, ok: '', err: '' });
     try {
-      const kpi = await createKpi(form);
-      setCreateOk(`✓ KPI creado — ID: ${kpi.id}`);
-      setForm(emptyForm);
-    } catch (e: unknown) {
-      setCreateErr(e instanceof Error ? e.message : 'Error al crear');
-    } finally {
-      setCreating(false);
-    }
+      const k = await createKpi(kpiForm, token);
+      setKpiState({ creating: false, ok: `✓ KPI creado — ID: ${k.id}`, err: '' });
+      setKpiForm(emptyKpi);
+    } catch (e: any) { setKpiState({ creating: false, ok: '', err: e.message }); }
   };
 
-  /* ─────────────────────────────────────────────────────────── */
+  const handleCreateEquipo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEqState({ creating: true, ok: '', err: '' });
+    try {
+      const eq = await crearEquipoDirecto(eqForm, token);
+      setEqState({ creating: false, ok: `✓ Equipo "${eq.nombre}" creado`, err: '' });
+      setEqForm(emptyEq);
+    } catch (e: any) { setEqState({ creating: false, ok: '', err: e.message }); }
+  };
+
+  const handleCreateMeta = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMetaState({ creating: true, ok: '', err: '' });
+    try {
+      if (editMetaId) await actualizarMeta(editMetaId, metaForm);
+      else await crearMeta(metaForm);
+      setMetaState({ creating: false, ok: `✓ Meta ${editMetaId ? 'actualizada' : 'creada'}`, err: '' });
+      if (!editMetaId) setMetaForm(emptyMeta);
+      metas.load();
+    } catch (e: any) { setMetaState({ creating: false, ok: '', err: e.message }); }
+  };
+
+  const handleEditarMeta = (meta: Meta) => {
+    setMetaForm({
+      nombre: meta.nombre,
+      areaId: meta.areaId,
+      indicadorId: meta.indicadorId || '',
+      valorObjetivo: meta.valorObjetivo,
+      valorActual: meta.valorActual,
+      fechaLimite: meta.fechaLimite
+    });
+    setEditMetaId(meta.id);
+    setTab('crear-meta');
+  };
+
+  const handleEliminarMeta = async (id: string) => {
+    if (!confirm('¿Eliminar meta?')) return;
+    try {
+      await eliminarMeta(id);
+      metas.setData(prev => prev ? prev.filter(m => m.id !== id) : prev);
+    } catch (e: any) { alert(e.message); }
+  };
+
+  /* ── Navigation ── */
+  interface NavItem { id: Tab; icon: string; label: string; sub: string; roles: string[]; }
+  interface NavGroup { label: string; items: NavItem[]; }
+
+  const navGroups: NavGroup[] = [
+    {
+      label: 'KPIs',
+      items: [
+        { id: 'gateway-kpis', icon: '◈', label: 'KPIs Gateway', sub: 'GET :3000 · 🔐 JWT', roles: ['jefe', 'gerente'] },
+        { id: 'raw-kpis', icon: '◉', label: 'KPIs Raw', sub: 'GET :3001 · Sin auth', roles: ['jefe'] },
+        { id: 'create-kpi', icon: '◎', label: 'Crear KPI', sub: 'POST :3001 · Sin auth', roles: ['jefe', 'gerente'] },
+      ]
+    },
+    {
+      label: 'EQUIPOS',
+      items: [
+        { id: 'gateway-eq', icon: '◈', label: 'Equipos Gateway', sub: 'GET :3000 · 🔐 JWT', roles: ['jefe', 'gerente'] },
+        { id: 'crear-equipo', icon: '◎', label: 'Crear Equipo', sub: 'POST :3003 · Sin auth', roles: ['jefe', 'gerente'] },
+        { id: 'raw-eq', icon: '◉', label: 'Equipos Raw', sub: 'GET :3003 · Sin auth', roles: ['jefe'] },
+      ]
+    },
+    {
+      label: 'METAS',
+      items: [
+        { id: 'metas', icon: '◈', label: 'Ver Metas', sub: 'GET :3002 · Sin auth', roles: ['jefe'] },
+        { id: 'crear-meta', icon: '◎', label: editMetaId ? 'Editando Meta' : 'Crear Meta', sub: ':3002 · Sin auth', roles: ['jefe'] },
+      ]
+    },
+    {
+      label: 'SISTEMA & AUDITORÍA',
+      items: [
+        { id: 'metricas', icon: '📊', label: 'Dashboard & Métricas', sub: 'Vista Consolidada', roles: ['jefe', 'gerente', 'vendedor'] },
+        { id: 'logs', icon: '📜', label: 'Logs del Sistema', sub: 'Auditoría Jefe', roles: ['jefe'] },
+      ]
+    }
+  ];
+
+  const filteredNav = navGroups.map(g => ({ ...g, items: g.items.filter(i => i.roles.includes(user.role)) })).filter(g => g.items.length > 0);
+
   return (
     <div className="dash-root">
-
-      {/* ── SIDEBAR ── */}
       <aside className="sidebar">
         <div className="sidebar-logo">
           <span className="logo-symbol">▲</span>
-          <div>
-            <div className="logo-title">CORDILLERA</div>
-            <div className="logo-sub">API Testing Hub</div>
-          </div>
+          <div><div className="logo-title">CORDILLERA</div><div className="logo-sub">Testing Hub</div></div>
         </div>
-
         <nav className="sidebar-nav">
-          <div className="nav-section-label">ENDPOINTS</div>
-
-          <button
-            className={`nav-item ${tab === 'gateway' ? 'active' : ''}`}
-            onClick={() => setTab('gateway')}
-          >
-            <span className="nav-icon">◈</span>
-            <span>
-              <div className="nav-label">KPIs Gateway</div>
-              <div className="nav-sub">GET :3000 · 🔐 JWT</div>
-            </span>
-          </button>
-
-          <button
-            className={`nav-item ${tab === 'raw' ? 'active' : ''}`}
-            onClick={() => setTab('raw')}
-          >
-            <span className="nav-icon">◉</span>
-            <span>
-              <div className="nav-label">KPIs Raw</div>
-              <div className="nav-sub">GET :3001 · Sin auth</div>
-            </span>
-          </button>
-
-          <button
-            className={`nav-item ${tab === 'create' ? 'active' : ''}`}
-            onClick={() => setTab('create')}
-          >
-            <span className="nav-icon">◎</span>
-            <span>
-              <div className="nav-label">Crear KPI</div>
-              <div className="nav-sub">POST :3001 · Sin auth</div>
-            </span>
-          </button>
+          {filteredNav.map(group => (
+            <div key={group.label}>
+              <div className="nav-section-label">{group.label}</div>
+              {group.items.map(n => (
+                <button key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setTab(n.id);
+                    if (n.id === 'crear-meta' && !editMetaId) {
+                      setMetaForm(emptyMeta);
+                    }
+                    if (n.id === 'crear-meta' && editMetaId) {
+                      // Si pulsa "Crear" estando en edición, reseteamos para crear una nueva
+                      setEditMetaId(null);
+                      setMetaForm(emptyMeta);
+                    }
+                  }}>
+                  <span className="nav-icon">{n.icon}</span>
+                  <span><div className="nav-label">{n.label}</div><div className="nav-sub">{n.sub}</div></span>
+                </button>
+              ))}
+            </div>
+          ))}
         </nav>
-
         <div className="sidebar-footer">
           <div className="user-info">
-            <div className="user-avatar">
-              {user.email[0].toUpperCase()}
-            </div>
-            <div>
-              <div className="user-email">{user.email}</div>
-              <div className="user-role">{user.role}</div>
-            </div>
+            <div className="user-avatar">{user.email[0].toUpperCase()}</div>
+            <div><div className="user-email">{user.email}</div><div className="user-role">{user.role}</div></div>
           </div>
-          <button className="btn-logout" onClick={onLogout}>
-            ← CERRAR SESIÓN
-          </button>
+          <button className="btn-logout" onClick={onLogout}>CERRAR SESIÓN</button>
         </div>
       </aside>
 
-      {/* ── MAIN CONTENT ── */}
       <main className="dash-main">
+        {tab === 'gateway-kpis' && <KpiListView gwKpis={gwKpis} onRefresh={gwKpis.load} />}
+        {tab === 'raw-kpis' && <KpiRawView rawKpis={rawKpis} onRefresh={rawKpis.load} />}
+        {tab === 'create-kpi' && <KpiCreateForm form={kpiForm} setForm={setKpiForm} onSubmit={handleCreateKpi} creating={kpiState.creating} ok={kpiState.ok} err={kpiState.err} />}
 
-        {/* TAB: Gateway KPIs */}
-        {tab === 'gateway' && (
-          <section className="content-section" key="gateway">
-            <div className="section-header">
-              <div>
-                <h2>KPIs Consolidados</h2>
-                <p className="section-desc">
-                  GET /api/dashboard/kpis · Gateway → ms-kpis
-                </p>
-              </div>
-              <div className="header-actions">
-                <span className="badge badge-auth">🔐 Bearer Token</span>
-                <button
-                  className="btn-refresh"
-                  onClick={loadGw}
-                  disabled={gwLoading}
-                >
-                  {gwLoading ? '...' : '↻ Actualizar'}
-                </button>
-              </div>
-            </div>
+        {tab === 'gateway-eq' && <EquipoListView gwEq={gwEq} onRefresh={gwEq.load} />}
+        {tab === 'crear-equipo' && <EquipoCreateForm form={eqForm} setForm={setEqForm} onSubmit={handleCreateEquipo} creating={eqState.creating} ok={eqState.ok} err={eqState.err} />}
+        {tab === 'raw-eq' && <EquipoRawView rawEq={rawEq} onRefresh={rawEq.load} />}
 
-            {gwError   && <div className="alert-error">{gwError}</div>}
-            {gwLoading && <div className="loading-state">Consultando gateway...</div>}
+        {tab === 'metas' && <MetaListView metas={metas} onRefresh={metas.load} onEditar={handleEditarMeta} onEliminar={handleEliminarMeta} onCrear={() => setTab('crear-meta')} />}
+        {tab === 'crear-meta' && <MetaCreateForm kpis={rawKpis.data} form={metaForm} setForm={setMetaForm} onSubmit={handleCreateMeta} creating={metaState.creating} ok={metaState.ok} err={metaState.err} editMetaId={editMetaId} onCancel={() => { setEditMetaId(null); setMetaForm(emptyMeta); setTab('metas'); }} />}
 
-            {!gwLoading && gwKpis.length === 0 && !gwError && (
-              <div className="empty-state">
-                Sin KPIs aún. Ve a <strong>Crear KPI</strong> para agregar datos.
-              </div>
-            )}
-
-            <div className="kpi-grid">
-              {gwKpis.map(kpi => (
-                <div key={kpi.id} className="kpi-card">
-                  <div className="kpi-card-top">
-                    <span className="kpi-area">{kpi.areaId}</span>
-                    <span
-                      className={`kpi-status ${
-                        kpi.estado === 'META CUMPLIDA'
-                          ? 'status-ok'
-                          : 'status-progress'
-                      }`}
-                    >
-                      {kpi.estado}
-                    </span>
-                  </div>
-
-                  <div className="kpi-nombre">{kpi.nombre}</div>
-
-                  <div className="kpi-valor">
-                    {kpi.valor.toLocaleString('es-CL')}
-                  </div>
-
-                  <div className="kpi-bar-container">
-                    <div
-                      className="kpi-bar-fill"
-                      style={{
-                        width: `${Math.min(
-                          parseFloat(kpi.cumplimiento),
-                          100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-
-                  <div className="kpi-cumplimiento">
-                    {kpi.cumplimiento} de la meta
-                  </div>
-
-                  <div className="kpi-id">
-                    ID: {kpi.id.slice(0, 8)}…
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* TAB: Raw KPIs */}
-        {tab === 'raw' && (
-          <section className="content-section" key="raw">
-            <div className="section-header">
-              <div>
-                <h2>KPIs Raw</h2>
-                <p className="section-desc">
-                  GET /api/kpis · Directo a ms-kpis (:3001)
-                </p>
-              </div>
-              <div className="header-actions">
-                <span className="badge badge-open">🔓 Sin Autenticación</span>
-                <button
-                  className="btn-refresh"
-                  onClick={loadRaw}
-                  disabled={rawLoading}
-                >
-                  {rawLoading ? '...' : '↻ Actualizar'}
-                </button>
-              </div>
-            </div>
-
-            {rawError   && <div className="alert-error">{rawError}</div>}
-            {rawLoading && <div className="loading-state">Consultando microservicio...</div>}
-
-            {!rawLoading && rawKpis.length === 0 && !rawError && (
-              <div className="empty-state">
-                Sin datos. ¿El ms-kpis está corriendo en :3001?
-              </div>
-            )}
-
-            {!rawLoading && rawKpis.length > 0 && (
-              <div className="table-wrapper">
-                <table className="kpi-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>NOMBRE</th>
-                      <th>VALOR</th>
-                      <th>ÁREA</th>
-                      <th>FECHA CREACIÓN</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rawKpis.map(kpi => (
-                      <tr key={kpi.id}>
-                        <td className="mono">{kpi.id.slice(0, 8)}…</td>
-                        <td>{kpi.nombre}</td>
-                        <td className="mono">
-                          {kpi.valor.toLocaleString('es-CL')}
-                        </td>
-                        <td>
-                          <span className="area-tag">{kpi.areaId}</span>
-                        </td>
-                        <td className="mono">
-                          {new Date(kpi.fechaCreacion).toLocaleString('es-CL')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* TAB: Crear KPI */}
-        {tab === 'create' && (
-          <section className="content-section" key="create">
-            <div className="section-header">
-              <div>
-                <h2>Crear KPI</h2>
-                <p className="section-desc">
-                  POST /api/kpis · Directo a ms-kpis (:3001) → PostgreSQL
-                </p>
-              </div>
-              <span className="badge badge-open">🔓 Sin Autenticación</span>
-            </div>
-
-            <div className="create-layout">
-              {/* Form */}
-              <form className="create-form" onSubmit={handleCreate}>
-                <div className="field-group">
-                  <label htmlFor="nombre">NOMBRE DEL KPI</label>
-                  <input
-                    id="nombre"
-                    type="text"
-                    value={form.nombre}
-                    onChange={e =>
-                      setForm(f => ({ ...f, nombre: e.target.value }))
-                    }
-                    placeholder="Ej: Ventas Retail Q2"
-                    required
-                  />
-                </div>
-
-                <div className="field-group">
-                  <label htmlFor="valor">VALOR</label>
-                  <input
-                    id="valor"
-                    type="number"
-                    value={form.valor === 0 ? '' : form.valor}
-                    min={0}
-                    step="any"
-                    onChange={e =>
-                      setForm(f => ({
-                        ...f,
-                        valor: e.target.value === '' ? 0 : parseFloat(e.target.value),
-                      }))
-                    }
-                    placeholder="Ej: 15000"
-                    required
-                  />
-                </div>
-
-                <div className="field-group">
-                  <label htmlFor="areaId">ÁREA ID</label>
-                  <input
-                    id="areaId"
-                    type="text"
-                    value={form.areaId}
-                    onChange={e =>
-                      setForm(f => ({ ...f, areaId: e.target.value }))
-                    }
-                    placeholder="Ej: ventas-sur"
-                    required
-                  />
-                </div>
-
-                {createErr && <div className="alert-error">{createErr}</div>}
-                {createOk  && <div className="alert-success">{createOk}</div>}
-
-                <button
-                  type="submit"
-                  className="btn-create"
-                  disabled={creating}
-                >
-                  {creating ? 'GUARDANDO...' : '+ CREAR KPI'}
-                </button>
-              </form>
-
-              {/* Request preview */}
-              <div className="request-preview">
-                <div className="preview-label">PREVIEW DEL REQUEST</div>
-                <pre className="preview-code">
-                  {JSON.stringify(
-                    {
-                      method: 'POST',
-                      url: 'http://localhost:3001/api/kpis',
-                      body: {
-                        nombre: form.nombre || '…',
-                        valor:  form.valor,
-                        areaId: form.areaId || '…',
-                      },
-                    },
-                    null,
-                    2
-                  )}
-                </pre>
-              </div>
-            </div>
-          </section>
-        )}
-
+        {tab === 'metricas' && <MetricSection token={token} />}
+        {tab === 'logs' && <LogsSection token={token} />}
       </main>
     </div>
   );

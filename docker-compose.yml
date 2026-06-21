@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # ── Bases de Datos ──────────────────────────────────────────────
+
+  db-kpis:
+    image: postgres:15
+    container_name: cordillera-db-kpis
+    environment:
+      POSTGRES_USER: ${DB_KPIS_USER}
+      POSTGRES_PASSWORD: ${DB_KPIS_PASSWORD}
+      POSTGRES_DB: ${DB_KPIS_NAME}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_KPIS_USER} -d ${DB_KPIS_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-metas:
+    image: postgres:15
+    container_name: cordillera-db-metas
+    environment:
+      POSTGRES_USER: ${DB_METAS_USER}
+      POSTGRES_PASSWORD: ${DB_METAS_PASSWORD}
+      POSTGRES_DB: ${DB_METAS_NAME}
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_METAS_USER} -d ${DB_METAS_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-equipos:
+    image: postgres:15
+    container_name: cordillera-db-equipos
+    environment:
+      POSTGRES_USER: ${DB_EQUIPOS_USER}
+      POSTGRES_PASSWORD: ${DB_EQUIPOS_PASSWORD}
+      POSTGRES_DB: ${DB_EQUIPOS_NAME}
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_EQUIPOS_USER} -d ${DB_EQUIPOS_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Microservicios Backend ──────────────────────────────────────
+
+  ms-kpis:
+    build:
+      context: .
+      dockerfile: apps/ms-kpis/Dockerfile
+    container_name: cordillera-ms-kpis
+    environment:
+      PORT: 3001
+      DB_HOST: db-kpis
+      DB_PORT: 5432
+      DB_USER: ${DB_KPIS_USER}
+      DB_PASSWORD: ${DB_KPIS_PASSWORD}
+      DB_NAME: ${DB_KPIS_NAME}
+    ports:
+      - "3001:3001"
+    depends_on:
+      db-kpis:
+        condition: service_healthy
+
+  ms-metas:
+    build:
+      context: .
+      dockerfile: apps/ms-metas/Dockerfile
+    container_name: cordillera-ms-metas
+    environment:
+      PORT: 3002
+      DB_HOST: db-metas
+      DB_PORT: 5432
+      DB_USER: ${DB_METAS_USER}
+      DB_PASSWORD: ${DB_METAS_PASSWORD}
+      DB_NAME: ${DB_METAS_NAME}
+      MS_KPIS_URL: http://ms-kpis:3001
+    ports:
+      - "3002:3002"
+    depends_on:
+      db-metas:
+        condition: service_healthy
+      ms-kpis:
+        condition: service_started
+
+  ms-equipos:
+    build:
+      context: .
+      dockerfile: apps/ms-equipos/Dockerfile
+    container_name: cordillera-ms-equipos
+    environment:
+      PORT: 3003
+      DB_HOST: db-equipos
+      DB_PORT: 5432
+      DB_USER: ${DB_EQUIPOS_USER}
+      DB_PASSWORD: ${DB_EQUIPOS_PASSWORD}
+      DB_NAME: ${DB_EQUIPOS_NAME}
+    ports:
+      - "3003:3003"
+    depends_on:
+      db-equipos:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+    container_name: cordillera-api-gateway
+    environment:
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET}
+      MS_KPIS_URL: http://ms-kpis:3001
+      MS_METAS_URL: http://ms-metas:3002
+      MS_EQUIPOS_URL: http://ms-equipos:3003
+    ports:
+      - "3000:3000"
+    depends_on:
+      - ms-kpis
+      - ms-metas
+      - ms-equipos
+
+  # ── Frontend ────────────────────────────────────────────────────
+
+  frontend:
+    build:
+      context: apps/frontend
+      dockerfile: Dockerfile
+    container_name: cordillera-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
