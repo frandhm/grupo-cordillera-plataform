@@ -1,0 +1,53 @@
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
+
+@Injectable()
+export class KpiApiFacade {
+  private readonly baseUrl: string;
+
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    const host = this.configService.get<string>('DB_KPIS_HOST') || 'localhost';
+    this.baseUrl = `http://${host}:3001/api/kpis`;
+  }
+
+  async validarIndicador(indicadorId: string): Promise<boolean> {
+    try {
+      await firstValueFrom(this.httpService.get(`${this.baseUrl}/${indicadorId}`));
+      return true;
+    } catch (error) {
+      console.error(`Error de conexión con MS-KPIs en ${this.baseUrl}/${indicadorId}:`, error.message);
+      if (error.response?.status === 404) {
+        throw new NotFoundException(`El indicador con ID ${indicadorId} no existe en el sistema de KPIs`);
+      }
+      throw new InternalServerErrorException(`Error de conexión con MS-KPIs: ${error.message}`);
+    }
+  }
+
+  async obtenerKpiRaw(indicadorId: string): Promise<any> {
+    try {
+      const { data } = await firstValueFrom(this.httpService.get(`${this.baseUrl}/${indicadorId}`));
+      return data;
+    } catch (error) {
+      console.error(`Error al obtener datos raw del KPI ${indicadorId}:`, error.message);
+      return null;
+    }
+  }
+
+  // Obtiene el historial de mediciones de un KPI para calcular cumplimiento real
+  async obtenerHistorial(indicadorId: string): Promise<any[]> {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/${indicadorId}/historial`)
+      );
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error(`Error al obtener historial del KPI ${indicadorId}:`, error.message);
+      return [];
+    }
+  }
+}
