@@ -3,8 +3,8 @@ import { AreaEntity } from './area.entity';
 
 @Entity('equipos')
 export class EquipoEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column()
     nombre: string;

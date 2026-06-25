@@ -5,8 +5,8 @@
  *   /gw    →  http://localhost:3000  (API Gateway)
  *   /ms    →  http://localhost:3001  (ms-kpis directo)
  *   /ms-eq →  http://localhost:3003  (ms-equipos directo)
+ *   /ms-mt →  http://localhost:3002  (ms-metas directo)
  */
-// MS-Equipos   (:3003)
 
 const GW = '/gw';
 const MS = '/ms';
@@ -28,8 +28,6 @@ export interface KpiGateway {
   descripcion?: string;
   unidadMedicion: string;
   fechaCreacion: string;
-  cumplimiento: string;
-  estado: 'META CUMPLIDA' | 'EN PROGRESO';
 }
 
 export interface KpiRaw {
@@ -55,7 +53,7 @@ export interface CreateKpiPayload {
 }
 
 export interface Equipo {
-  id: number;
+  id: string;       // UUID desde la corrección
   nombre: string;
   lider: string;
   areaId: string;
@@ -81,42 +79,59 @@ export interface CreateAreaPayload {
   nombre: string;
 }
 
-export type EstadoMeta = 'EN_PROGRESO' | 'CUMPLIDA' | 'NO_CUMPLIDA';
+export type EstadoMeta = 'EN_PROGRESO' | 'EXCELENTE' | 'NO_CUMPLIDA';
+export type OperadorMeta = '>=' | '<=' | '=';
 
 export interface Meta {
   id: string;
   nombre: string;
   areaId: string;
+  equipoId?: string;
   indicadorId?: string;
+  periodo: string;
+  fechaInicio: string;
+  fechaFin: string;
   valorObjetivo: number;
-  valorActual: number;
+  operador: OperadorMeta;
+  unidad: string;
+  descripcionObjetivo?: string;
   estado: EstadoMeta;
-  fechaLimite: string;
   fechaCreacion: string;
-  porcentajeCumplimiento?: string;
+  // Campos calculados dinámicamente (no se persisten)
+  valorPromedio?: number | null;
+  totalMediciones?: number;
+  tasaCumplimiento?: number;
 }
 
 export interface CreateMetaPayload {
   nombre: string;
   areaId: string;
+  equipoId?: string;
   indicadorId?: string;
+  periodo: string;
+  fechaInicio: string;
+  fechaFin: string;
   valorObjetivo: number;
-  valorActual: number;
-  fechaLimite: string;
+  operador: OperadorMeta;
+  unidad: string;
+  descripcionObjetivo?: string;
 }
 
 export interface UpdateMetaPayload {
   nombre?: string;
   areaId?: string;
+  equipoId?: string;
   indicadorId?: string;
+  periodo?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
   valorObjetivo?: number;
-  valorActual?: number;
-  fechaLimite?: string;
+  operador?: OperadorMeta;
+  unidad?: string;
+  descripcionObjetivo?: string;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   HELPER
-══════════════════════════════════════════════════════════════ */
+/* ── Helper ─────────────────────────────────────────────────── */
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -156,9 +171,7 @@ export async function getLogs(token: string): Promise<any[]> {
   return handleResponse<any[]>(res);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   KPIs — ms-kpis :3001 (directo, sin auth)
-══════════════════════════════════════════════════════════════ */
+/* ── KPIs — ms-kpis :3001 ───────────────────────────────────── */
 
 export async function getMsKpis(): Promise<KpiRaw[]> {
   const res = await fetch(`${MS}/api/kpis`);
@@ -197,15 +210,11 @@ export async function getHistorialKpi(id: string): Promise<any[]> {
 }
 
 export async function eliminarKpi(id: string): Promise<{ mensaje: string }> {
-  const res = await fetch(`${MS}/api/kpis/${id}`, {
-    method: 'DELETE',
-  });
+  const res = await fetch(`${MS}/api/kpis/${id}`, { method: 'DELETE' });
   return handleResponse<{ mensaje: string }>(res);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   EQUIPOS — Gateway :3000 (GET con JWT)
-══════════════════════════════════════════════════════════════ */
+/* ── Equipos — Gateway :3000 ────────────────────────────────── */
 
 export async function getGatewayEquipos(token: string): Promise<Equipo[]> {
   const res = await fetch(`${GW}/api/dashboard/equipos`, {
@@ -214,12 +223,7 @@ export async function getGatewayEquipos(token: string): Promise<Equipo[]> {
   return handleResponse<Equipo[]>(res);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   EQUIPOS — ms-equipos :3003 (directo, sin auth)
-   BUG FIX: El gateway POST /dashboard/equipos llama internamente
-   a :3002 (que es ms-metas, no ms-equipos). Para crear equipos
-   correctamente hay que ir directo al microservicio en :3003.
-══════════════════════════════════════════════════════════════ */
+/* ── Equipos — ms-equipos :3003 ─────────────────────────────── */
 
 export async function getMsEquipos(): Promise<Equipo[]> {
   const res = await fetch(`${MS_EQ}/api/equipos`);
@@ -238,9 +242,7 @@ export async function crearEquipoDirecto(payload: CreateEquipoPayload, token: st
   return handleResponse<Equipo>(res);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   METAS — ms-metas :3002 (directo, sin auth)
-══════════════════════════════════════════════════════════════ */
+/* ── Metas — ms-metas :3002 ─────────────────────────────────── */
 
 export async function getMsMetas(): Promise<Meta[]> {
   const res = await fetch(`${MS_MT}/api/metas`);
@@ -271,15 +273,11 @@ export async function actualizarMeta(id: string, payload: UpdateMetaPayload): Pr
 }
 
 export async function eliminarMeta(id: string): Promise<{ mensaje: string }> {
-  const res = await fetch(`${MS_MT}/api/metas/${id}`, {
-    method: 'DELETE',
-  });
+  const res = await fetch(`${MS_MT}/api/metas/${id}`, { method: 'DELETE' });
   return handleResponse<{ mensaje: string }>(res);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   AREAS — ms-equipos :3003
-══════════════════════════════════════════════════════════════ */
+/* ── Áreas — ms-equipos :3003 ───────────────────────────────── */
 
 export async function getMsAreas(): Promise<Area[]> {
   const res = await fetch(`${MS_EQ}/api/areas`);
@@ -295,9 +293,7 @@ export async function crearArea(payload: CreateAreaPayload): Promise<Area> {
   return handleResponse<Area>(res);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   BFF — Gateway :3000
-══════════════════════════════════════════════════════════════ */
+/* ── BFF — Gateway :3000 ────────────────────────────────────── */
 
 export async function getResumenConsolidado(token: string): Promise<any[]> {
   const res = await fetch(`${GW}/api/dashboard/resumen`, {

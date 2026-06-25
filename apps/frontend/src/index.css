@@ -639,3 +639,130 @@ body {
 .action-btn:hover {
   opacity: 0.85;
 }
+/* ─── Stat Grid (Dashboard) ─── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  transition: border-color 0.2s;
+}
+
+.stat-card:hover {
+  border-color: var(--text-muted);
+}
+
+.stat-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.35rem;
+}
+
+.stat-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+/* ─── KPI Card Top Row ─── */
+.kpi-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-area {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: rgba(0,240,255,0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,240,255,0.15);
+}
+
+.kpi-status {
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.kpi-id {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+/* ─── Panel Lateral Medición ─── */
+.medicion-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+
+/* ─── Header Actions ─── */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.badge-auth {
+  background: rgba(255, 200, 0, 0.1);
+  color: var(--gold);
+  border: 1px solid rgba(255, 200, 0, 0.2);
+}
+
+.badge-open {
+  background: rgba(0, 212, 170, 0.1);
+  color: var(--teal);
+  border: 1px solid rgba(0, 212, 170, 0.2);
+}
+
+/* ─── Logo sub ─── */
+.logo-sub {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+/* ─── Nav icon / label ─── */
+.nav-icon {
+  font-size: 0.9rem;
+  min-width: 16px;
+}
+
+.nav-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}

@@ -11,7 +11,7 @@ export class AppService {
   ) { }
 
   private logs: any[] = [
-    { id: 1, event: 'LOGIN_SUCCESS', user: 'admin@cordillera.com', detail: 'Inicio de sesión exitoso', timestamp: new Date(Date.now() - 1000*60*60).toISOString() },
+    { id: 1, event: 'LOGIN_SUCCESS', user: 'admin@cordillera.com', detail: 'Inicio de sesión exitoso', timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString() },
   ];
 
   async addLog(event: string, user: string, detail: string) {
@@ -22,12 +22,11 @@ export class AppService {
       detail,
       timestamp: new Date().toISOString()
     };
-    this.logs.unshift(newLog); // Agregar al principio
+    this.logs.unshift(newLog);
   }
 
   async login(usuario: string, clave: string) {
     let role = '';
-    // JEFE (Acceso total)
     if (usuario === 'admin@cordillera.com' && clave === '123456') {
       role = 'jefe';
     } else if (usuario === 'gerente@cordillera.com' && clave === '123456') {
@@ -67,27 +66,25 @@ export class AppService {
     const urlEquipos = 'http://localhost:3003/api/equipos';
     const urlKpis = 'http://localhost:3001/api/kpis';
 
-    // 1. Validar que el equipo existe (si se proporcionó un equipoId)
+    // Validar que el equipo existe (si se proporcionó un equipoId)
     if (datos.equipoId) {
       try {
         const { data: equipos } = await firstValueFrom(this.httpService.get(urlEquipos));
-        // ms-equipos usa id numérico o string? Según api.ts es id: number.
-        // Pero el usuario ingresa un ID manual. Vamos a buscarlo.
-        const equipoExiste = equipos.some(e => e.id.toString() === datos.equipoId.toString() || e.nombre === datos.equipoId);
-        
+        // Equipos ahora usan UUID, comparación directa de strings
+        const equipoExiste = equipos.some((e: any) => e.id === datos.equipoId);
+
         if (!equipoExiste) {
-           await this.addLog('KPI_CREATE_ERROR', userEmail, `Intento de crear KPI con equipo inexistente: ${datos.equipoId}`);
-           throw new HttpException(`El equipo con ID "${datos.equipoId}" no existe.`, HttpStatus.BAD_REQUEST);
+          await this.addLog('KPI_CREATE_ERROR', userEmail, `Intento de crear KPI con equipo inexistente: ${datos.equipoId}`);
+          throw new HttpException(`El equipo con ID "${datos.equipoId}" no existe.`, HttpStatus.BAD_REQUEST);
         }
       } catch (e) {
         if (e instanceof HttpException) throw e;
         console.error('Error validando equipo:', e.message);
-        // Si ms-equipos no responde, permitimos pasar pero con advertencia en logs
         await this.addLog('SYSTEM_WARNING', 'System', 'ms-equipos no disponible para validación');
       }
     }
 
-    // 2. Crear el KPI
+    // Crear el KPI
     try {
       const { data: nuevoKpi } = await firstValueFrom(this.httpService.post(urlKpis, datos));
       await this.addLog('KPI_CREATED', userEmail, `KPI "${datos.nombre}" creado exitosamente`);
@@ -109,13 +106,12 @@ export class AppService {
     }
   }
 
-  // AGREGACIÓN BFF: Combina KPIs con sus Metas
+  // AGREGACIÓN BFF: Combina KPIs con sus Metas (usa tasaCumplimiento del ms-metas)
   async obtenerResumenConsolidado() {
     const urlKpis = 'http://localhost:3001/api/kpis';
     const urlMetas = 'http://localhost:3002/api/metas';
 
     try {
-      // Llamadas en paralelo para eficiencia
       const [resKpis, resMetas] = await Promise.all([
         firstValueFrom(this.httpService.get(urlKpis)),
         firstValueFrom(this.httpService.get(urlMetas))
@@ -125,13 +121,14 @@ export class AppService {
       const metas = resMetas.data;
 
       // Unimos cada KPI con su meta correspondiente
-      return kpis.map(kpi => {
-        const metaAsociada = metas.find(m => m.indicadorId === kpi.id);
+      return kpis.map((kpi: any) => {
+        const metaAsociada = metas.find((m: any) => m.indicadorId === kpi.id);
         return {
           ...kpi,
           meta: metaAsociada || null,
-          cumplimientoCalculado: metaAsociada 
-            ? `${((kpi.valor / metaAsociada.valorObjetivo) * 100).toFixed(2)}%`
+          // Usar tasaCumplimiento calculada por ms-metas; si no hay meta, mostrar 0%
+          cumplimientoCalculado: metaAsociada
+            ? `${metaAsociada.tasaCumplimiento?.toFixed(2) ?? 0}%`
             : '0%'
         };
       });

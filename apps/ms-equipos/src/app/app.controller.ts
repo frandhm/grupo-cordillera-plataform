@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AppService } from './app.service';
 
@@ -14,7 +14,7 @@ export class AppController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar todos los equipos y sus líderes' })
+  @ApiOperation({ summary: 'Listar todos los equipos con su área asociada' })
   obtenerTodos() {
     return this.appService.obtenerTodos();
   }
@@ -25,9 +25,21 @@ export class AppController {
     return this.appService.obtenerAreas();
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtener detalle de un equipo por su ID' })
+  obtenerPorId(@Param('id') id: string) {
+    return this.appService.obtenerPorId(id);
+  }
+
   @Post('areas')
   @ApiOperation({ summary: 'Crear una nueva área departamental' })
   crearArea(@Body('nombre') nombre: string) {
     return this.appService.crearArea(nombre);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Eliminar un equipo del sistema' })
+  eliminar(@Param('id') id: string) {
+    return this.appService.eliminar(id);
   }
 }

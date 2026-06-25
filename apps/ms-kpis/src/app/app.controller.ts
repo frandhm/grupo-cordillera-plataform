@@ -8,7 +8,7 @@ export class AppController {
   constructor(private readonly kpiService: AppService) { }
 
   @Get()
-  @ApiOperation({ summary: 'Listar todos los KPIs registrados' })
+  @ApiOperation({ summary: 'Listar todos los KPIs registrados con su historial de mediciones' })
   async obtenerKpis() {
     return await this.kpiService.obtenerTodos();
   }
@@ -26,13 +26,13 @@ export class AppController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Registrar nueva medición (acumula valor y guarda historial)' })
+  @ApiOperation({ summary: 'Registrar nueva medición (reemplaza valor actual y guarda historial)' })
   async actualizarKpi(@Param('id') id: string, @Body('valor') valor: number) {
     return await this.kpiService.actualizarValor(id, valor);
   }
 
   @Get(':id/historial')
-  @ApiOperation({ summary: 'Consultar histórico de mediciones de un indicador' })
+  @ApiOperation({ summary: 'Consultar histórico de mediciones de un indicador (orden cronológico ASC)' })
   async obtenerHistorial(@Param('id') id: string) {
     return await this.kpiService.obtenerHistorial(id);
   }

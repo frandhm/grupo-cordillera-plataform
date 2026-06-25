@@ -17,7 +17,7 @@ export class AppService {
     // Verificar si el área existe o crearla (auto-gestión simple para el proyecto)
     if (datos.areaId) {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(datos.areaId);
-      let area = isUuid 
+      let area = isUuid
         ? await this.areaRepository.findOne({ where: { id: datos.areaId } })
         : await this.areaRepository.findOne({ where: { nombre: datos.areaId } });
 
@@ -32,7 +32,20 @@ export class AppService {
   }
 
   async obtenerTodos(): Promise<EquipoEntity[]> {
-    return await this.equipoRepository.find();
+    return await this.equipoRepository.find({ relations: ['area'] });
+  }
+
+  async obtenerPorId(id: string): Promise<EquipoEntity> {
+    const equipo = await this.equipoRepository.findOne({ where: { id }, relations: ['area'] });
+    if (!equipo) throw new NotFoundException(`Equipo con id ${id} no encontrado`);
+    return equipo;
+  }
+
+  async eliminar(id: string): Promise<{ mensaje: string }> {
+    const equipo = await this.equipoRepository.findOne({ where: { id } });
+    if (!equipo) throw new NotFoundException(`Equipo con id ${id} no encontrado`);
+    await this.equipoRepository.remove(equipo);
+    return { mensaje: `Equipo ${id} eliminado correctamente` };
   }
 
   /* Gestión de Áreas */
