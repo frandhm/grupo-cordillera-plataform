@@ -13,11 +13,7 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "paths": {
-      "@grupo-cordillera-plataform/shared-interfaces": [
-        "./shared-interfaces/src/index.ts"
-      ]
-    }
+    "paths": {}
   },
   "exclude": ["node_modules", "tmp"]
 }
