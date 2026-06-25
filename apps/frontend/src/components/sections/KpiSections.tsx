@@ -1,61 +1,72 @@
 import React from 'react';
-import { SectionHeader, KpiCard } from '../DashboardComponents';
-import { KpiGateway, KpiRaw, CreateKpiPayload, eliminarKpi } from '../../api';
+import { SectionHeader } from '../DashboardComponents';
+import { KpiRaw, CreateKpiPayload, eliminarKpi } from '../../api';
 
-/* ── View KPIs ── */
-export function KpiListView({ gwKpis, onRefresh }: { gwKpis: any, onRefresh: () => void }) {
-  return (
-    <section className="content-section">
-      <SectionHeader title="KPIs Consolidados" desc="GET /api/dashboard/kpis · Gateway → ms-kpis (:3001)"
-        badge="Bearer Token" badgeType="auth" onRefresh={onRefresh} loading={gwKpis.loading} />
-      {gwKpis.error && <div className="alert-error">{gwKpis.error}</div>}
-      {gwKpis.loading && <div className="loading-state">Consultando gateway...</div>}
-      <div className="kpi-grid">
-        {gwKpis.data?.map((k: KpiGateway) => <KpiCard key={k.id} kpi={k} />)}
-      </div>
-    </section>
-  );
-}
-
-export function KpiRawView({ rawKpis, onRefresh }: { rawKpis: any, onRefresh: () => void }) {
+/* ── Vista unificada de KPIs ─────────────────────────────────── */
+export function KpiListView({ rawKpis, onRefresh, onCrear }: {
+  rawKpis: any;
+  onRefresh: () => void;
+  onCrear: () => void;
+}) {
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar KPI e historial?')) return;
-    try {
-      await eliminarKpi(id);
-      onRefresh();
-    } catch (e: any) {
-      alert(e.message);
-    }
+    if (!confirm('¿Eliminar este KPI y todo su historial?')) return;
+    try { await eliminarKpi(id); onRefresh(); }
+    catch (e: any) { alert(e.message); }
   };
 
   return (
     <section className="content-section">
-      <SectionHeader title="KPIs Raw" desc="GET /api/kpis · Directo a ms-kpis (:3001)"
-        badge="Sin Autenticación" badgeType="open" onRefresh={onRefresh} loading={rawKpis.loading} />
-      {rawKpis.error && <div className="alert-error">{rawKpis.error}</div>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <SectionHeader title="KPIs" desc="GET /api/kpis · ms-kpis (:3001)"
+          badge="Sin Autenticación" badgeType="open" onRefresh={onRefresh} loading={rawKpis.loading} />
+        <button className="btn-create" style={{ marginTop: 0, padding: '0.5rem 1rem' }} onClick={onCrear}>+ CREAR KPI</button>
+      </div>
+
+      {rawKpis.error && <div className="alert-error" style={{ marginBottom: '1rem' }}>{rawKpis.error}</div>}
+
       <div className="table-wrapper">
         <table className="kpi-table">
-          <thead><tr><th>ID</th><th>NOMBRE</th><th>VALOR</th><th>ÁREA</th><th>FECHA</th><th>ACCIONES</th></tr></thead>
+          <thead>
+            <tr>
+              <th>NOMBRE</th>
+              <th>ÁREA</th>
+              <th>VALOR ACTUAL</th>
+              <th>UNIDAD</th>
+              <th>RESPONSABLE</th>
+              <th>FECHA CREACIÓN</th>
+              <th>ACCIONES</th>
+            </tr>
+          </thead>
           <tbody>
+            {rawKpis.loading && (
+              <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Cargando…</td></tr>
+            )}
+            {!rawKpis.loading && rawKpis.data?.length === 0 && (
+              <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No hay KPIs registrados. Crea el primero.</td></tr>
+            )}
             {rawKpis.data?.map((k: KpiRaw) => (
               <tr key={k.id}>
-                <td className="mono" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span title={k.id}>{k.id.slice(0, 8)}</span>
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(k.id); alert('ID Copiado'); }}
-                    style={{ padding: '2px 4px', fontSize: '0.6rem', background: 'var(--accent)', border: 'none', borderRadius: '3px', cursor: 'pointer', color: 'black' }}
-                  >
-                    COPY
-                  </button>
-                </td>
-                <td>{k.nombre}</td>
-                <td className="mono">{k.valor.toLocaleString('es-CL')}</td>
-                <td><span className="area-tag">{k.areaId}</span></td>
-                <td className="mono">{new Date(k.fechaCreacion).toLocaleString('es-CL')}</td>
                 <td>
-                  <button onClick={() => handleDelete(k.id)} style={{ background: 'var(--red)', color: 'white', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}>
-                    ELIMINAR
-                  </button>
+                  <div style={{ fontWeight: 600 }}>{k.nombre}</div>
+                  {k.descripcion && <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 2 }}>{k.descripcion}</div>}
+                </td>
+                <td><span className="area-tag">{k.areaId}</span></td>
+                <td className="mono" style={{ fontWeight: 700, fontSize: '1rem' }}>{k.valor.toLocaleString('es-CL')}</td>
+                <td><span className="team-tag">{k.unidadMedicion}</span></td>
+                <td style={{ fontSize: '0.75rem' }}>{k.responsable ?? '—'}</td>
+                <td className="mono" style={{ fontSize: '0.65rem' }}>{new Date(k.fechaCreacion).toLocaleDateString('es-CL')}</td>
+                <td>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(k.id); }}
+                      title="Copiar ID"
+                      style={{ padding: '3px 7px', fontSize: '0.6rem', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer', color: 'var(--text-muted)' }}
+                    >ID</button>
+                    <button
+                      onClick={() => handleDelete(k.id)}
+                      style={{ padding: '3px 7px', fontSize: '0.6rem', background: 'var(--red)', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#fff', fontWeight: 700 }}
+                    >✕</button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -66,7 +77,7 @@ export function KpiRawView({ rawKpis, onRefresh }: { rawKpis: any, onRefresh: ()
   );
 }
 
-/* ── Create KPI ── */
+/* ── Formulario crear KPI ────────────────────────────────────── */
 export function KpiCreateForm({ form, setForm, onSubmit, creating, ok, err }: {
   form: CreateKpiPayload;
   setForm: (f: any) => void;
@@ -77,55 +88,56 @@ export function KpiCreateForm({ form, setForm, onSubmit, creating, ok, err }: {
 }) {
   return (
     <section className="content-section">
-      <SectionHeader title="Crear KPI" desc="POST /api/kpis · Directo a ms-kpis (:3001)"
+      <SectionHeader title="Crear KPI" desc="POST /api/kpis · ms-kpis (:3001)"
         badge="Sin Autenticación" badgeType="open" />
-      <div className="create-layout">
-        <form className="create-form" onSubmit={onSubmit}>
-          <div className="field-group">
-            <label>NOMBRE DEL KPI</label>
-            <input type="text" value={form.nombre} required placeholder="Ej: Ventas Retail Q2"
-              onChange={e => setForm((f: any) => ({ ...f, nombre: e.target.value }))} />
+      <form className="create-form" onSubmit={onSubmit}>
+        <div className="field-group">
+          <label>NOMBRE DEL KPI</label>
+          <input type="text" value={form.nombre} required placeholder="Ej: Producción Diaria de Cobre"
+            onChange={e => setForm((f: any) => ({ ...f, nombre: e.target.value }))} />
+        </div>
+        <div className="field-row" style={{ display: 'flex', gap: '1rem' }}>
+          <div className="field-group" style={{ flex: 2 }}>
+            <label>ÁREA ID</label>
+            <input type="text" value={form.areaId} required placeholder="Ej: operaciones-mineras"
+              onChange={e => setForm((f: any) => ({ ...f, areaId: e.target.value }))} />
           </div>
-          <div className="field-group">
-            <label>VALOR</label>
-            <input type="number" min={0} step="any" required placeholder="Ej: 15000"
+          <div className="field-group" style={{ flex: 1 }}>
+            <label>VALOR INICIAL</label>
+            <input type="number" min={0} step="any" required placeholder="0"
               value={form.valor === 0 ? '' : form.valor}
               onChange={e => setForm((f: any) => ({ ...f, valor: e.target.value === '' ? 0 : parseFloat(e.target.value) }))} />
           </div>
-          <div className="field-group">
-            <label>ÁREA ID</label>
-            <input type="text" value={form.areaId} required placeholder="Ej: ventas-sur"
-              onChange={e => setForm((f: any) => ({ ...f, areaId: e.target.value }))} />
-          </div>
-          <div className="field-group">
-            <label>DESCRIPCIÓN</label>
-            <textarea value={form.descripcion} placeholder="Opcional"
-              onChange={e => setForm((f: any) => ({ ...f, descripcion: e.target.value }))} />
-          </div>
-          <div className="field-row" style={{ display: 'flex', gap: '1rem' }}>
-            <div className="field-group" style={{ flex: 1 }}>
-              <label>EQUIPO RESPONSABLE (ID)</label>
-              <input type="text" value={form.equipoId || ''} placeholder="Ej: equipo-ventas-sur"
-                onChange={e => setForm((f: any) => ({ ...f, equipoId: e.target.value }))} />
-            </div>
-            <div className="field-group" style={{ flex: 1 }}>
-              <label>RESPONSABLE (NOMBRE)</label>
-              <input type="text" value={form.responsable || ''} placeholder="Ej: Juan Pérez"
-                onChange={e => setForm((f: any) => ({ ...f, responsable: e.target.value }))} />
-            </div>
-          </div>
-          <div className="field-group">
-            <label>UNIDAD DE MEDICIÓN</label>
-            <input type="text" value={form.unidadMedicion} required placeholder="Ej: CLP, %, Unidades"
+          <div className="field-group" style={{ flex: 1 }}>
+            <label>UNIDAD</label>
+            <input type="text" value={form.unidadMedicion} required placeholder="Ej: Tons"
               onChange={e => setForm((f: any) => ({ ...f, unidadMedicion: e.target.value }))} />
           </div>
-          {err && <div className="alert-error">{err}</div>}
-          {ok && <div className="alert-success">{ok}</div>}
-          <button type="submit" className="btn-create" disabled={creating}>
-            {creating ? 'GUARDANDO...' : '+ CREAR KPI'}
-          </button>
-        </form>
-      </div>
+        </div>
+        <div className="field-group">
+          <label>DESCRIPCIÓN</label>
+          <textarea value={form.descripcion} placeholder="Descripción del indicador (opcional)"
+            onChange={e => setForm((f: any) => ({ ...f, descripcion: e.target.value }))}
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 6, padding: '0.75rem', color: '#fff', width: '100%', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+        </div>
+        <div className="field-row" style={{ display: 'flex', gap: '1rem' }}>
+          <div className="field-group" style={{ flex: 1 }}>
+            <label>EQUIPO (ID)</label>
+            <input type="text" value={form.equipoId || ''} placeholder="UUID del equipo (opcional)"
+              onChange={e => setForm((f: any) => ({ ...f, equipoId: e.target.value }))} />
+          </div>
+          <div className="field-group" style={{ flex: 1 }}>
+            <label>RESPONSABLE</label>
+            <input type="text" value={form.responsable || ''} placeholder="Ej: Juan Pérez"
+              onChange={e => setForm((f: any) => ({ ...f, responsable: e.target.value }))} />
+          </div>
+        </div>
+        {err && <div className="alert-error">{err}</div>}
+        {ok && <div className="alert-success">{ok}</div>}
+        <button type="submit" className="btn-create" disabled={creating}>
+          {creating ? 'GUARDANDO...' : '+ CREAR KPI'}
+        </button>
+      </form>
     </section>
   );
 }

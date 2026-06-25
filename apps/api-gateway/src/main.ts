@@ -9,18 +9,14 @@ async function bootstrap() {
 
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
-  app.setGlobalPrefix(globalPrefix);
 
-
-  // Activamos las validaciones globales (para el LoginDto por ejemplo)
   app.useGlobalPipes(new ValidationPipe());
 
-  // Configuración de Swagger para la Gateway
   const config = new DocumentBuilder()
     .setTitle('Grupo Cordillera - API Gateway')
     .setDescription('Punto de entrada único para la gestión de KPIs, Metas y Usuarios')
     .setVersion('1.0')
-    .addBearerAuth() // <--- ¡OJO AQUÍ! Esto añade el botón "Authorize" para el JWT
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

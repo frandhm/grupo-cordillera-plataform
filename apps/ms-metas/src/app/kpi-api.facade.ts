@@ -12,7 +12,6 @@ export class KpiApiFacade {
     private readonly configService: ConfigService,
   ) {
     const host = this.configService.get<string>('DB_KPIS_HOST') || 'localhost';
-    // Nota: Usamos el puerto 3001 que es donde corre el MS-KPIs
     this.baseUrl = `http://${host}:3001/api/kpis`;
   }
 
@@ -36,6 +35,19 @@ export class KpiApiFacade {
     } catch (error) {
       console.error(`Error al obtener datos raw del KPI ${indicadorId}:`, error.message);
       return null;
+    }
+  }
+
+  // Obtiene el historial de mediciones de un KPI para calcular cumplimiento real
+  async obtenerHistorial(indicadorId: string): Promise<any[]> {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/${indicadorId}/historial`)
+      );
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error(`Error al obtener historial del KPI ${indicadorId}:`, error.message);
+      return [];
     }
   }
 }

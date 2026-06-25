@@ -31,31 +31,22 @@ export class AppService {
   async crearKpi(datos: any): Promise<KpiEntity> {
     const kpiData = KpiFactory.create('General', datos);
     const kpi = await this.kpiRepository.save(this.kpiRepository.create(kpiData));
-    
+
     // Guardar medición inicial
     await this.medicionRepository.save(this.medicionRepository.create({
       valor: kpi.valor,
       kpi: kpi
     }));
-    
+
     return kpi;
   }
 
-  async obtenerTodos(): Promise<any[]> {
-    const kpis = await this.kpiRepository.find();
-    return kpis.map(kpi => {
-      const metaSimulada = 10000;
-      const porcentaje = (kpi.valor / metaSimulada) * 100;
-      return {
-        ...kpi,
-        cumplimiento: `${porcentaje.toFixed(2)}%`,
-        estado: porcentaje >= 100 ? 'META CUMPLIDA' : 'EN PROGRESO'
-      };
-    });
+  async obtenerTodos(): Promise<KpiEntity[]> {
+    return await this.kpiRepository.find({ relations: ['mediciones'] });
   }
 
   async obtenerPorId(id: string): Promise<KpiEntity> {
-    const kpi = await this.kpiRepository.findOne({ where: { id } });
+    const kpi = await this.kpiRepository.findOne({ where: { id }, relations: ['mediciones'] });
     if (!kpi) throw new NotFoundException('KPI no encontrado');
     return kpi;
   }
@@ -64,11 +55,12 @@ export class AppService {
     const kpi = await this.kpiRepository.findOne({ where: { id } });
     if (!kpi) throw new NotFoundException('KPI no encontrado');
 
-    const valorAnterior = kpi.valor;
-    kpi.valor = Number(valorAnterior) + Number(nuevoValor);
-    
+    // Reemplazar el valor actual, no acumular
+    kpi.valor = Number(nuevoValor);
+
     await this.kpiRepository.save(kpi);
 
+    // Guardar la nueva medición en el historial
     await this.medicionRepository.save(this.medicionRepository.create({
       valor: kpi.valor,
       kpi: kpi
@@ -80,7 +72,7 @@ export class AppService {
   async obtenerHistorial(id: string) {
     return await this.medicionRepository.find({
       where: { kpi: { id } },
-      order: { fecha: 'DESC' }
+      order: { fecha: 'ASC' }
     });
   }
 
