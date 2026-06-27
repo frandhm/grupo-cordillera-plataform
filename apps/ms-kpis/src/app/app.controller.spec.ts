@@ -3,19 +3,30 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 describe('AppController', () => {
-  let app: TestingModule;
+  let appController: AppController;
 
   beforeAll(async () => {
-    app = await Test.createTestingModule({
+    const app = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [
+        {
+          provide: AppService,
+          useValue: {
+            obtenerKpis: jest.fn(),
+            obtenerPorId: jest.fn(),
+            crearNuevoKpi: jest.fn(),
+            actualizarKpi: jest.fn(),
+            obtenerHistorial: jest.fn(),
+            eliminarKpi: jest.fn(),
+          },
+        },
+      ],
     }).compile();
+
+    appController = app.get<AppController>(AppController);
   });
 
-  describe('getData', () => {
-    it('should return "Hello API"', () => {
-      const appController = app.get<AppController>(AppController);
-      expect(appController.getData()).toEqual({ message: 'Hello API' });
-    });
+  it('should be defined', () => {
+    expect(appController).toBeDefined();
   });
 });
